@@ -29,7 +29,6 @@ pub enum Tokens {
     Literal(String), //String
     NewLine, // \n
     Space, // ' '
-    Sharp, //#
     Happy, // )
     Sad, // (
     Nop

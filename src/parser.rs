@@ -1,44 +1,49 @@
 use crate::{main, toskens::Tokens, Compiler};
 impl Compiler {
     pub fn parse(&mut self) {
-        let main_vec:Vec<RenderObject> = Vec::new();
-        let here_vec:Vec<RenderObject> = main_vec; //와 이건 벡터가 포인터라서 좋은 점임
-        let mut expect_token:Vec<Tokens> = Vec::new();
-        self.idx = 0;
-        let curr_token = match self.get_current() {
-            Some(token) => {
-                token
-            },
-            None => Tokens::Nop,
-        };
-        match curr_token {
-            Tokens::Header(level) => {
-                let currentidx = self.idx.clone();
-                while true {
-                    match self.get_current() {
-                        Some(token) => {
-                            match token {
-                                Tokens::Header(lvl) => {
-                                    if lvl == level {
-                                        
-                                    }
-                                },
-                                _ => {}
-                            }
-                        },
-                        None => {
-
+        self.token_to_objects();
+        for _ in 0..3 {
+            let parsed:Vec<Objects> = Vec::new();
+            let mut temp:Vec<Vec<Objects>> = Vec::new();
+            temp.push(parsed);
+            loop {
+                let mut expected_token:Vec<Tokens> = vec![Tokens::Nop];
+                self.idx = 0;
+                match self.get_current() {
+                    Objects::RenderObject(render_object) => {
+                        temp.last_mut().unwrap().push(Objects::RenderObject(render_object));
+                    },
+                    Objects::Tokens(tokens) => {
+                        match tokens {
+                            Tokens::Header(level) => {
+                                let expect = expected_token.iter().enumerate().rfind(|&(_i, &x)| x == Tokens::Header(level));
+                                match expect {
+                                    Some((i, value)) => {
+                                        temp.get(i).unwrap()
+                                    },
+                                    None => {
+                                        temp.push(Vec::new());
+                                        expected_token.push(Tokens::Header(level));
+                                    },
+                                }
+                            },
+                            _ => {}
                         }
                     }
                 }
-            },
-            _ => {
-
             }
         }
     }
-    fn get_current(&self) -> Option<Tokens> {
-        return self.tokens.get(self.idx).cloned()
+    fn token_to_objects(&mut self) {
+        for token in self.tokens.clone() {
+            self.parsetemp.push(Objects::Tokens(token));
+        }
+    }
+    fn get_current(&self) -> Objects {
+        match self.parsetemp.get(self.idx) {
+            Some(token) => return token.clone(),
+            None => return Objects::Tokens(Tokens::Nop),
+        }
     }
     fn get_before(&self, how_much:usize) -> Tokens {
         if self.idx < how_much {
@@ -48,12 +53,29 @@ impl Compiler {
     }
 }
 #[derive(Debug)]
+#[derive(PartialEq)]
+#[derive(Clone)]
 pub enum RenderObject {
     Heading(Heading)
 }
+#[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone)]
+pub enum Objects {
+    RenderObject(RenderObject),
+    Tokens(Tokens)
+}
+#[derive(Debug)]
+#[derive(PartialEq)]
+#[derive(Clone)]
 pub struct Heading {
     folded:bool,
     render_objects:Vec<RenderObject>,
     level:u8
+}
+#[derive(Debug)]
+#[derive(PartialEq)]
+#[derive(Clone)]
+pub struct Main {
+    render_objects:Vec<RenderObject>,
 }

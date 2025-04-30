@@ -245,7 +245,7 @@ impl Compiler {
                                   }
                               }
                           }
-                          _ => {self.tokens.push(Tokens::Sharp)}
+                          _ => {self.tokens.push(Tokens::Literal("#".to_owned()))}
                       }
                   },
                   ' ' => {

@@ -3,7 +3,7 @@ mod lexer;
 mod parser;
 use std::{io::{stdout, Write}, time::Instant};
 
-use parser::RenderObject;
+use parser::{Objects, RenderObject};
 
 use crate::toskens::Tokens;
 #[derive(Debug)]
@@ -12,7 +12,8 @@ struct Compiler {
     idx:usize,
     tokens:Vec<Tokens>,
     chars:Vec<char>,
-    parsed:Vec<RenderObject>
+    parsed:Vec<RenderObject>,
+    parsetemp:Vec<Objects>
 }
 
 impl Compiler {
@@ -23,7 +24,8 @@ impl Compiler {
             idx:0,
             tokens: Vec::new(),
             chars: Vec::new(),
-            parsed: Vec::new()
+            parsed: Vec::new(),
+            parsetemp: Vec::new(),
         }
     }
 }
