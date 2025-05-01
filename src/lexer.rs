@@ -224,6 +224,10 @@ impl Compiler {
                           '#' => {
                               self.tokens.push(Tokens::Comment);
                               self.inc();
+                          },
+                          '!' => {
+                            self.tokens.push(Tokens::ShBoom);
+                            self.inc();
                           }
                           _ => {self.tokens.push(Tokens::MacroClose)}
                       }
