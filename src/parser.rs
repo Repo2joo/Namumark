@@ -117,37 +117,27 @@ impl Compiler {
         return self.parsetemp.get(self.idx-how_much).unwrap_or(&Objects::Tokens(Tokens::Nop.clone())).clone();
     }
 }
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Clone)]
+#[derive(Debug,PartialEq,Clone)]
 pub enum RenderObject {
     Heading(Heading),
     Literal(Literal)
 }
-#[derive(PartialEq)]
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug,PartialEq,Clone)]
 pub enum Objects {
     RenderObject(RenderObject),
     Tokens(Tokens)
 }
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Clone)]
+#[derive(Debug,PartialEq,Clone)]
 pub struct Heading {
     folded:bool,
     render_objects:Vec<Objects>,
     level:u8
 }
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Clone)]
+#[derive(Debug,PartialEq,Clone)]
 pub struct Literal {
     pub literal:String
 } 
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Clone)]
+#[derive(Debug,PartialEq,Clone)]
 pub struct Main {
     render_objects:Vec<RenderObject>,
 }
