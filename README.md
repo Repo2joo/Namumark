@@ -6,3 +6,7 @@ A namumark renderer made with Rust
 
 내 정규식...
 # 파서 만들다가 머리가 실시간으로 터져나가는중
+# Why rust?
+- 웹어셈 컴파일 가능
+- 빠름(지 않을까)
+- 내가 익숙함
