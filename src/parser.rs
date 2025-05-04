@@ -121,55 +121,80 @@ impl Compiler {
                                                                 RenderObject::Literal(literal) => {
                                                                     match literal.literal.as_str() { //메치문에서 or 어케씀???
                                                                         "각주" | "footnote" | "ref" => {
-                                                                            
+                                                                            match tempvec.get(1) {
+                                                                                Some(_) => {
+                                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
+                                                                                    temp.last_mut().unwrap().extend(tempvec);
+                                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
+                                                                                },
+                                                                                None => {
+                                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro { argument: None, typeofmacro: MacroType::Footnote })));
+                                                                                }
+                                                                            }
                                                                         },
-                                                                        "목차" | "toc" | "tableofcontents" => {
-
+                                                                        "목차" | "toc" | "topic" | "tableofcontents" => {
+                                                                            todo!()
                                                                         },
                                                                         "개행" | "br" => {
-                                                                            
+                                                                            todo!()
                                                                         }
                                                                         "삽입" | "include" => {
-
+                                                                            todo!()
                                                                         },
                                                                         "age" | "나이" => {
-
+                                                                            todo!()
                                                                         },
                                                                         "date" | "datetime" | "시간" => {
-
+                                                                            todo!()
                                                                         },
                                                                         "dday" | "디데이" => {
-
+                                                                            todo!()
                                                                         },
-                                                                        "clearfix" | "플로우 속성 초기화" | "클픽" => {
-
+                                                                        "clearfix" | "플로우 속성 초기화" | "클픽" | "클리어픽스" => {
+                                                                            todo!()
                                                                         },
                                                                         "yt" | "유튶" | "유튜브" | "youtube" => {
-
+                                                                            todo!()
                                                                         },
                                                                         "카카오티비" | "kakaotv" | "카카오tv" => {
-
+                                                                            todo!()
                                                                         },
-                                                                        "nicovideo" => {}, //이뭔씹
+                                                                        "nicovideo" => {todo!()}, //이뭔씹
                                                                         "vimeo" => {
-
+                                                                            todo!()
                                                                         },
                                                                         "navertv" => {
-
+                                                                            todo!()
                                                                         }
                                                                         "펼접" => {
-
+                                                                            todo!()
                                                                         }
-                                                                        _ => todo!() //음
+                                                                        _ => {
+                                                                            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
+                                                                            temp.last_mut().unwrap().extend(tempvec);
+                                                                            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
+                                                                        } //음
                                                                     }
                                                                 },
-                                                                _ => {}
+                                                                _ => {
+                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
+                                                                    temp.last_mut().unwrap().extend(tempvec);
+                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
+                                                                }
                                                             }
                                                         },
-                                                        Objects::Tokens(tokens) => {},
+                                                        Objects::Tokens(tokens) => {
+                                                            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
+                                                            temp.last_mut().unwrap().extend(tempvec);
+                                                            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
+                                                        },
                                                     }
                                                 },
-                                                None => todo!(),
+                                                None => {
+                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
+                                                    temp.last_mut().unwrap().extend(tempvec);
+                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
+                                                },
                                             }
                                         }
                                     }
@@ -218,12 +243,35 @@ impl Compiler {
 #[derive(Debug,PartialEq,Clone)]
 pub enum RenderObject {
     Heading(Heading),
-    Literal(Literal)
+    Literal(Literal),
+    Macro(Macro)
 }
 #[derive(Debug,PartialEq,Clone)]
 pub enum Objects {
     RenderObject(RenderObject),
     Tokens(Tokens)
+}
+#[derive(Debug,PartialEq,Clone)]
+pub struct Macro {
+    argument:Option<String>,
+    typeofmacro:MacroType,
+}
+#[derive(Debug,PartialEq,Clone)]
+pub enum MacroType {
+    Footnote,
+    Topic,
+    BreakLine,
+    Include,
+    Age,
+    Date,
+    Dday,
+    ClearFix,
+    Youtube,
+    KakaoTV,
+    NicoNicoTV, //i'm always two televisions away... to televisions away
+    Vimeo,
+    NaverTV,
+    펼접,
 }
 #[derive(Debug,PartialEq,Clone)]
 pub struct Heading {

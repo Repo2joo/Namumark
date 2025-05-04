@@ -32,50 +32,7 @@ impl Compiler {
 }
 
 fn main() {
-    let asdf = String::from("
-==# asdf #==
-
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-==# asdf #==
-
-
-");
+    let asdf = String::from("[incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude][incldude]");
     let mut lexer = Compiler::new(asdf);
     let start = Instant::now();
     lexer.lex();
