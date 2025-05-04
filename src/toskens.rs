@@ -35,6 +35,7 @@ pub enum Tokens {
     Sad, // (
     Nop,
     ShBoom,
+    Sharp,
 } //리다이렉트는 따로 처리할 예정
 impl Default for Tokens {
     fn default() -> Self {
@@ -46,38 +47,42 @@ fn sarade () {
 }
 impl Tokens {
     pub fn to_literal(&self) -> Objects {
+        return Objects::RenderObject(RenderObject::Literal(Literal {literal:self.to_string()}));
+    }
+    pub fn to_string(&self) -> String {
         match self {
-            Tokens::Bold => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("'''")})),
-            Tokens::BoldItalic => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("'''''")})),
-            Tokens::Comment => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("##")})),
-            Tokens::DeletedBar => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("--")})),
-            Tokens::DeletedWave => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("~~")})),
-            Tokens::Escape(char) => return Objects::RenderObject(RenderObject::Literal(Literal {literal:format!("\\{}", char)})),
-            Tokens::FixedComment => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("@##")})),
-            Tokens::Header(level) => return Objects::RenderObject(RenderObject::Literal(Literal {literal:"=".repeat(level.to_owned().into()).to_string()})),
-            Tokens::Italic => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("''")})),
-            Tokens::UnderLine => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("__")})),
-            Tokens::Sup => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("^^")})),
-            Tokens::Sub => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from(",,")})),
-            Tokens::TripleClose => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("}}}")})),
-            Tokens::TripleOpen => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("{{{")})),
-            Tokens::LinkOpen => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("[[")})),
-            Tokens::LinkClose => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]]")})),
-            Tokens::MacroOpen => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("[")})),
-            Tokens::MacroClose => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})),
-            Tokens::StarList => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("*")})),
-            Tokens::Reference => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("[*")})),
-            Tokens::Quote(_) => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from(">")})),
-            Tokens::Horizon => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("----")})),
-            Tokens::PipeLine => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("|")})),
-            Tokens::TablePipe => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("||")})),
-            Tokens::Literal(string) => return Objects::RenderObject(RenderObject::Literal(Literal {literal:string.to_owned()})),
-            Tokens::NewLine => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("\n")})),
-            Tokens::Space => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from(" ")})),
-            Tokens::Happy => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from(")")})),
-            Tokens::Sad => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("(")})),
-            Tokens::Nop => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("wtf")})),
-            Tokens::ShBoom => return Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("#!")})), //Life could be suck~ Life could be suck~ do dodo do do shboom
+            Tokens::Bold => return String::from("'''"),
+            Tokens::BoldItalic => return String::from("'''''"),
+            Tokens::Comment => return String::from("##"),
+            Tokens::DeletedBar => return String::from("--"),
+            Tokens::DeletedWave => return String::from("~~"),
+            Tokens::Escape(char) => return format!("\\{}", char),
+            Tokens::FixedComment => return String::from("@##"),
+            Tokens::Header(level) => return "=".repeat(level.to_owned().into()).to_string(),
+            Tokens::Italic => return String::from("''"),
+            Tokens::UnderLine => return String::from("__"),
+            Tokens::Sup => return String::from("^^"),
+            Tokens::Sub => return String::from(",,"),
+            Tokens::TripleClose => return String::from("}}}"),
+            Tokens::TripleOpen => return String::from("{{{"),
+            Tokens::LinkOpen => return String::from("[["),
+            Tokens::LinkClose => return String::from("]]"),
+            Tokens::MacroOpen => return String::from("["),
+            Tokens::MacroClose => return String::from("]"),
+            Tokens::StarList => return String::from("*"),
+            Tokens::Reference => return String::from("[*"),
+            Tokens::Quote(_) => return String::from(">"),
+            Tokens::Horizon => return String::from("----"),
+            Tokens::PipeLine => return String::from("|"),
+            Tokens::TablePipe => return String::from("||"),
+            Tokens::Literal(string) => return string.to_owned(),
+            Tokens::NewLine => return String::from("\n"),
+            Tokens::Space => return String::from(" "),
+            Tokens::Happy => return String::from(")"),
+            Tokens::Sad => return String::from("("),
+            Tokens::Nop => return String::from("wtf"),
+            Tokens::ShBoom => return String::from("#!"), //Life could be suck~ Life could be suck~ do dodo do do shboom
+            Tokens::Sharp => return String::from("#")
         }
     }
 }

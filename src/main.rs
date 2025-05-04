@@ -1,6 +1,7 @@
 mod toskens;
 mod lexer;
 mod parser;
+mod render;
 use std::{io::{stdout, Write}, time::Instant};
 
 use parser::{Objects, RenderObject};
@@ -31,13 +32,58 @@ impl Compiler {
 }
 
 fn main() {
-    let asdf = String::from("빵사줘\\사\\라ㄹㄹ (다 빵)");
+    let asdf = String::from("
+==# asdf #==
+
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+==# asdf #==
+
+
+");
     let mut lexer = Compiler::new(asdf);
     let start = Instant::now();
     lexer.lex();
-    lexer.parse();
     println!("    {:#?}\n
     Lexed IN: {:#?}", lexer.tokens, start.elapsed());
+    let start2 = Instant::now();
+    lexer.parse();
+    println!("Prased IN: {:?}", start2.elapsed());
     stdout().flush();
 }
 

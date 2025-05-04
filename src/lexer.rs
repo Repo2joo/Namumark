@@ -229,7 +229,7 @@ impl Compiler {
                             self.tokens.push(Tokens::ShBoom);
                             self.inc();
                           }
-                          _ => {self.tokens.push(Tokens::MacroClose)}
+                          _ => {self.tokens.push(Tokens::Sharp)}
                       }
                   },
                   '@' => {

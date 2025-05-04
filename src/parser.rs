@@ -1,14 +1,14 @@
-use crate::{main, toskens::Tokens, Compiler};
+use crate::{toskens::Tokens, Compiler};
 impl Compiler {
     pub fn parse(&mut self) {
         self.token_to_objects();
         for _ in 0..3 {
+            self.idx = 0;
             let parsed:Vec<Objects> = Vec::new();
             let mut temp:Vec<Vec<Objects>> = Vec::new();
             temp.push(parsed);
+            let mut expected_token:Vec<Tokens> = vec![Tokens::Nop];
             loop {
-                let mut expected_token:Vec<Tokens> = vec![Tokens::Nop];
-                self.idx = 0;
                 match self.get_current() {
                     Objects::RenderObject(render_object) => {
                         temp.last_mut().unwrap().push(Objects::RenderObject(render_object));
@@ -16,12 +16,12 @@ impl Compiler {
                     Objects::Tokens(tokens) => {
                         match tokens {
                             Tokens::Header(level) => {
-                                let expect = expected_token.iter().enumerate().rfind(|&(ref _i, &ref x)| *x == Tokens::Header(level)); //fuck
+                                let expect = expected_token.iter().enumerate().rfind(|&(ref _i, &ref x)| x == &Tokens::Header(level)); //fuck
                                 match expect {
                                     Some((i, _value)) => {
                                         if self.get_next() == Objects::Tokens(Tokens::NewLine) {
                                             let mut tempvec = temp.get(i).unwrap().to_owned();
-                                            if i != expected_token.len() {
+                                            if i != expected_token.len()-1 {
                                                 for i in i+1..expected_token.len() {
                                                     tempvec.push(expected_token.get(i).unwrap().to_owned().to_literal());
                                                     tempvec.extend(temp.get(i).unwrap().to_owned());
@@ -32,33 +32,54 @@ impl Compiler {
                                                 }
                                                 temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Heading(Heading {
                                                     folded:match tempvec.first().unwrap() {
-                                                        Objects::RenderObject(_render_object) => false,
                                                         Objects::Tokens(tokens) => {
-                                                            match tokens.to_owned() {
-                                                                Tokens::Literal(string) => { //이게 String은 포인터다보니까 이런짓을 하는것. 왜냐면 eq로 비교를 하면 활당되는 메모리 주소가 다르니까 무조건 false가 뜸 러스트의 안좋은 점중 하나.
-                                                                    match string.as_str() {
-                                                                        "#" => true,
-                                                                        _ => false
-                                                                    }
-                                                                },
+                                                            match tokens  {
+                                                                Tokens::Sharp => true,
                                                                 _ => false
                                                             }
                                                         },
+                                                        _ => false
                                                     } || match tempvec.last().unwrap() {
-                                                        Objects::RenderObject(_render_object) => false,
                                                         Objects::Tokens(tokens) => {
-                                                            match tokens.to_owned() {
-                                                                Tokens::Literal(string) => { //이게 String은 포인터다보니까 이런짓을 하는것. 왜냐면 eq로 비교를 하면 활당되는 메모리 주소가 다르니까 무조건 false가 뜸 러스트의 안좋은 점중 하나.
-                                                                    match string.as_str() {
-                                                                        "#" => true,
-                                                                        _ => false
-                                                                    }
-                                                                },
+                                                            match tokens  {
+                                                                Tokens::Sharp => true,
                                                                 _ => false
                                                             }
                                                         },
+                                                        _ => false
                                                     },
-                                                    render_objects:tempvec,
+                                                    render_objects:tempvec.clone(),
+                                                    level:level,
+                                                })));
+                                            } else {
+                                                for _ in i..expected_token.len() {
+                                                    temp.pop();
+                                                    expected_token.pop();
+                                                }
+                                                let folded = match tempvec.first().unwrap() {
+                                                    Objects::Tokens(tokens) => {
+                                                        match tokens  {
+                                                            Tokens::Sharp => true,
+                                                            _ => false
+                                                        }
+                                                    },
+                                                    _ => false
+                                                } || match tempvec.last().unwrap() {
+                                                    Objects::Tokens(tokens) => {
+                                                        match tokens  {
+                                                            Tokens::Sharp => true,
+                                                            _ => false
+                                                        }
+                                                    },
+                                                    _ => false
+                                                };
+                                                if folded {
+                                                    tempvec.remove(0);
+                                                    tempvec.remove(tempvec.len()-1);
+                                                }
+                                                temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Heading(Heading {
+                                                    folded:folded,
+                                                    render_objects:tempvec.clone(),
                                                     level:level,
                                                 })));
                                             }
@@ -75,21 +96,98 @@ impl Compiler {
                                 }
                             }, //match header
                             Tokens::MacroOpen => {
-                                todo!()
+                                temp.push(Vec::new());
+                                expected_token.push(Tokens::MacroClose);
                             }, //match macroOpen
                             Tokens::MacroClose => {
-                                todo!()
+                                let expect = expected_token.iter().enumerate().rfind(|&(ref _i, &ref x)| *x == Tokens::MacroClose); //fuck
+                                match expect {
+                                    Some((i, _value)) => {
+                                        let mut tempvec = temp.get(i).unwrap().to_owned();
+                                        if i != expected_token.len() {
+                                            for i in i+1..expected_token.len() {
+                                                tempvec.push(expected_token.get(i).unwrap().to_owned().to_literal());
+                                                tempvec.extend(temp.get(i).unwrap().to_owned());
+                                            }
+                                            for _ in i..expected_token.len() {
+                                                temp.pop();
+                                                expected_token.pop();
+                                            }
+                                            match tempvec.first() {
+                                                Some(objects) => {
+                                                    match objects {
+                                                        Objects::RenderObject(render_object) => {
+                                                            match render_object {
+                                                                RenderObject::Literal(literal) => {
+                                                                    match literal.literal.as_str() { //메치문에서 or 어케씀???
+                                                                        "각주" | "footnote" | "ref" => {
+                                                                            
+                                                                        },
+                                                                        "목차" | "toc" | "tableofcontents" => {
+
+                                                                        },
+                                                                        "개행" | "br" => {
+                                                                            
+                                                                        }
+                                                                        "삽입" | "include" => {
+
+                                                                        },
+                                                                        "age" | "나이" => {
+
+                                                                        },
+                                                                        "date" | "datetime" | "시간" => {
+
+                                                                        },
+                                                                        "dday" | "디데이" => {
+
+                                                                        },
+                                                                        "clearfix" | "플로우 속성 초기화" | "클픽" => {
+
+                                                                        },
+                                                                        "yt" | "유튶" | "유튜브" | "youtube" => {
+
+                                                                        },
+                                                                        "카카오티비" | "kakaotv" | "카카오tv" => {
+
+                                                                        },
+                                                                        "nicovideo" => {}, //이뭔씹
+                                                                        "vimeo" => {
+
+                                                                        },
+                                                                        "navertv" => {
+
+                                                                        }
+                                                                        "펼접" => {
+
+                                                                        }
+                                                                        _ => todo!() //음
+                                                                    }
+                                                                },
+                                                                _ => {}
+                                                            }
+                                                        },
+                                                        Objects::Tokens(tokens) => {},
+                                                    }
+                                                },
+                                                None => todo!(),
+                                            }
+                                        }
+                                    }
+                                    None => {
+                                        temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
+                                    },
+                                }
                             }, //match macroClose
-                            Tokens::Happy => {
-                                todo!()
-                            }, //match happycat
-                            Tokens::Sad => {
-                                todo!()
-                            }, //match bananacat
-                            _ => {}
+                            Tokens::Nop => {
+                                break;
+                            }
+                            tok => {
+                                temp.last_mut().unwrap().push(tok.to_literal());
+                            }
                         }
                     }
                 }
+                self.idx += 1;
             }
         }
     }
@@ -132,6 +230,14 @@ pub struct Heading {
     folded:bool,
     render_objects:Vec<Objects>,
     level:u8
+}
+impl Heading {
+    pub fn get_lvl(&self) -> u8 {
+        return self.level;
+    }
+    pub fn get_render_objects(&self) -> Vec<Objects> {
+        return self.render_objects.clone();
+    }
 }
 #[derive(Debug,PartialEq,Clone)]
 pub struct Literal {
