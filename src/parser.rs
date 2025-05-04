@@ -1,11 +1,11 @@
-use crate::{toskens::Tokens, Compiler};
+use crate::{render::render_raw, toskens::Tokens, Compiler};
 impl Compiler {
     pub fn parse(&mut self) {
         self.token_to_objects();
         for _ in 0..3 {
             self.idx = 0;
             let parsed:Vec<Objects> = Vec::new();
-            let mut temp:Vec<Vec<Objects>> = Vec::new();
+            let mut temp: Vec<Vec<Objects>> = Vec::new();
             temp.push(parsed);
             let mut expected_token:Vec<Tokens> = vec![Tokens::Nop];
             loop {
@@ -119,82 +119,32 @@ impl Compiler {
                                                         Objects::RenderObject(render_object) => {
                                                             match render_object {
                                                                 RenderObject::Literal(literal) => {
-                                                                    match literal.literal.as_str() { //메치문에서 or 어케씀???
-                                                                        "각주" | "footnote" | "ref" => {
-                                                                            match tempvec.get(1) {
-                                                                                Some(_) => {
-                                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
-                                                                                    temp.last_mut().unwrap().extend(tempvec);
-                                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
-                                                                                },
-                                                                                None => {
-                                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro { argument: None, typeofmacro: MacroType::Footnote })));
-                                                                                }
-                                                                            }
-                                                                        },
-                                                                        "목차" | "toc" | "topic" | "tableofcontents" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "개행" | "br" => {
-                                                                            todo!()
-                                                                        }
-                                                                        "삽입" | "include" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "age" | "나이" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "date" | "datetime" | "시간" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "dday" | "디데이" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "clearfix" | "플로우 속성 초기화" | "클픽" | "클리어픽스" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "yt" | "유튶" | "유튜브" | "youtube" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "카카오티비" | "kakaotv" | "카카오tv" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "nicovideo" => {todo!()}, //이뭔씹
-                                                                        "vimeo" => {
-                                                                            todo!()
-                                                                        },
-                                                                        "navertv" => {
-                                                                            todo!()
-                                                                        }
-                                                                        "펼접" => {
-                                                                            todo!()
-                                                                        }
-                                                                        _ => {
-                                                                            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
-                                                                            temp.last_mut().unwrap().extend(tempvec);
-                                                                            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
-                                                                        } //음
+                                                                    match literal.literal.to_lowercase().as_str() { //메치문에서 or 어케씀???
+                                                                        "각주" | "footnote" | "ref" => {dont_have_argument(tempvec, &mut temp, MacroType::Footnote)},
+                                                                        "목차" | "toc" | "topic" | "tableofcontents" => {dont_have_argument(tempvec, &mut temp, MacroType::Topic)},
+                                                                        "개행" | "br" => {dont_have_argument(tempvec, &mut temp, MacroType::BreakLine)},
+                                                                        "삽입" | "include" => {have_argument(tempvec, &mut temp, MacroType::Include)},
+                                                                        "age" | "나이" => {have_argument(tempvec, &mut temp, MacroType::Include)},
+                                                                        "date" | "datetime" | "시간" => {dont_have_argument(tempvec, &mut temp, MacroType::Date)},
+                                                                        "dday" | "디데이" => {have_argument(tempvec, &mut temp, MacroType::Dday)},
+                                                                        "clearfix" | "플로우 속성 초기화" | "클픽" | "클리어픽스" => {dont_have_argument(tempvec, &mut temp, MacroType::ClearFix)},
+                                                                        "yt" | "유튶" | "유튜브" | "youtube" => {have_argument(tempvec, &mut temp, MacroType::Youtube)},
+                                                                        "카카오티비" | "kakaotv" | "카카오tv" => {have_argument(tempvec, &mut temp, MacroType::KakaoTV)},
+                                                                        "nicovideo" | "니코니코" /*| "니코카도 아보카도"*/ => {have_argument(tempvec, &mut temp, MacroType::NicoNicoTV)}, //이뭔씹.
+                                                                        "vimeo" | "비메오" => {have_argument(tempvec, &mut temp, MacroType::Vimeo)},
+                                                                        "navertv" | "네이버티비" => {have_argument(tempvec, &mut temp, MacroType::NaverTV)},
+                                                                        "anchor" | "링크북마크" | "엥커" => {have_argument(tempvec, &mut temp, MacroType::Anchor)}
+                                                                        "펼접" => {dont_have_argument(tempvec, &mut temp, MacroType::펼접)},
+                                                                        _ => {unexpected_macro(&mut temp, tempvec)}
                                                                     }
                                                                 },
-                                                                _ => {
-                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
-                                                                    temp.last_mut().unwrap().extend(tempvec);
-                                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
-                                                                }
+                                                                _ => {unexpected_macro(&mut temp, tempvec)}
                                                             }
                                                         },
-                                                        Objects::Tokens(tokens) => {
-                                                            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
-                                                            temp.last_mut().unwrap().extend(tempvec);
-                                                            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
-                                                        },
+                                                        Objects::Tokens(_tokens) => {unexpected_macro(&mut temp, tempvec)},
                                                     }
                                                 },
-                                                None => {
-                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
-                                                    temp.last_mut().unwrap().extend(tempvec);
-                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
-                                                },
+                                                None => {unexpected_macro(&mut temp, tempvec)},
                                             }
                                         }
                                     }
@@ -205,7 +155,11 @@ impl Compiler {
                             }, //match macroClose
                             Tokens::Nop => {
                                 break;
-                            }
+                            },
+                            //몇몇 리터럴이 되면 안되는 토큰들
+                            Tokens::Sharp => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Sharp))},
+                            Tokens::Sad => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Sad))},
+                            Tokens::Happy => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Happy))},
                             tok => {
                                 temp.last_mut().unwrap().push(tok.to_literal());
                             }
@@ -213,6 +167,28 @@ impl Compiler {
                     }
                 }
                 self.idx += 1;
+            }
+            self.parsetemp = temp.first().unwrap().to_owned();
+        }
+        fn unexpected_macro (temp:&mut Vec<Vec<Objects>>, tempvec:Vec<Objects>) {
+            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
+            temp.last_mut().unwrap().extend(tempvec);
+            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
+        }
+        fn have_argument (tempvec:Vec<Objects>, temp:&mut Vec<Vec<Objects>>, macrotype:MacroType) {
+            match (tempvec.get(1), tempvec.last().unwrap()) {
+                (Some(object), lastobject) => {
+                    if object.to_owned() == Objects::Tokens(Tokens::Sad) && lastobject.to_owned() == Objects::Tokens(Tokens::Happy) {
+                        temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro {typeofmacro: macrotype, argument:Some(render_raw((&tempvec[2..=tempvec.len()-2]).to_vec())) })));   
+                    } else {unexpected_macro(temp, tempvec)}
+                },
+                (None, _) => {unexpected_macro(temp, tempvec)}
+            }
+        }
+        fn dont_have_argument (tempvec:Vec<Objects>, temp:&mut Vec<Vec<Objects>>, macrotype:MacroType) {
+            match tempvec.get(1) {
+                Some(_) => {unexpected_macro(temp, tempvec)},
+                None => {temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro { argument: None, typeofmacro: macrotype })))}
             }
         }
     }
@@ -256,8 +232,17 @@ pub struct Macro {
     argument:Option<String>,
     typeofmacro:MacroType,
 }
+impl Macro {
+    pub fn getarg(&self) -> Option<String> {
+        return self.argument.clone()
+    }
+    pub fn gettype(&self) -> MacroType {
+        return self.typeofmacro.clone()
+    }
+}
 #[derive(Debug,PartialEq,Clone)]
 pub enum MacroType {
+    Anchor,
     Footnote,
     Topic,
     BreakLine,

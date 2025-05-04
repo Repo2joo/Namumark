@@ -10,6 +10,9 @@ pub fn render_raw(vector:Vec<Objects>) -> String {
                     string.push_str(&format!("{}{}{}", "=".repeat(lvl.into()), render_raw(heading.get_render_objects()), "=".repeat(lvl.into())));
                 },
                 crate::parser::RenderObject::Literal(literal) => string.push_str(&literal.literal),
+                crate::parser::RenderObject::Macro(mecro) => {
+                    string.push_str("음");
+                }
             },
             Objects::Tokens(tokens) => string.push_str(&tokens.to_string()),
         }
