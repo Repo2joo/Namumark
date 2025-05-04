@@ -152,6 +152,27 @@ impl Compiler {
                                         temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
                                     },
                                 }
+                                fn unexpected_macro (temp:&mut Vec<Vec<Objects>>, tempvec:Vec<Objects>) {
+                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
+                                    temp.last_mut().unwrap().extend(tempvec);
+                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
+                                }
+                                fn have_argument (tempvec:Vec<Objects>, temp:&mut Vec<Vec<Objects>>, macrotype:MacroType) {
+                                    match (tempvec.get(1), tempvec.last().unwrap()) {
+                                        (Some(object), lastobject) => {
+                                            if object.to_owned() == Objects::Tokens(Tokens::Sad) && lastobject.to_owned() == Objects::Tokens(Tokens::Happy) {
+                                                temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro {typeofmacro: macrotype, argument:Some(render_raw((&tempvec[2..=tempvec.len()-2]).to_vec())) })));   
+                                            } else {unexpected_macro(temp, tempvec)}
+                                        },
+                                        (None, _) => {unexpected_macro(temp, tempvec)}
+                                    }
+                                }
+                                fn dont_have_argument (tempvec:Vec<Objects>, temp:&mut Vec<Vec<Objects>>, macrotype:MacroType) {
+                                    match tempvec.get(1) {
+                                        Some(_) => {unexpected_macro(temp, tempvec)},
+                                        None => {temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro { argument: None, typeofmacro: macrotype })))}
+                                    }
+                                }
                             }, //match macroClose
                             Tokens::Nop => {
                                 break;
@@ -169,27 +190,6 @@ impl Compiler {
                 self.idx += 1;
             }
             self.parsetemp = temp.first().unwrap().to_owned();
-        }
-        fn unexpected_macro (temp:&mut Vec<Vec<Objects>>, tempvec:Vec<Objects>) {
-            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal : String::from("[")})));
-            temp.last_mut().unwrap().extend(tempvec);
-            temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]")})));
-        }
-        fn have_argument (tempvec:Vec<Objects>, temp:&mut Vec<Vec<Objects>>, macrotype:MacroType) {
-            match (tempvec.get(1), tempvec.last().unwrap()) {
-                (Some(object), lastobject) => {
-                    if object.to_owned() == Objects::Tokens(Tokens::Sad) && lastobject.to_owned() == Objects::Tokens(Tokens::Happy) {
-                        temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro {typeofmacro: macrotype, argument:Some(render_raw((&tempvec[2..=tempvec.len()-2]).to_vec())) })));   
-                    } else {unexpected_macro(temp, tempvec)}
-                },
-                (None, _) => {unexpected_macro(temp, tempvec)}
-            }
-        }
-        fn dont_have_argument (tempvec:Vec<Objects>, temp:&mut Vec<Vec<Objects>>, macrotype:MacroType) {
-            match tempvec.get(1) {
-                Some(_) => {unexpected_macro(temp, tempvec)},
-                None => {temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro { argument: None, typeofmacro: macrotype })))}
-            }
         }
     }
     fn token_to_objects(&mut self) {
