@@ -113,39 +113,26 @@ impl Compiler {
                                                 temp.pop();
                                                 expected_token.pop();
                                             }
-                                            match tempvec.first() {
-                                                Some(objects) => {
-                                                    match objects {
-                                                        Objects::RenderObject(render_object) => {
-                                                            match render_object {
-                                                                RenderObject::Literal(literal) => {
-                                                                    match literal.literal.to_lowercase().as_str() { //메치문에서 or 어케씀???
-                                                                        "각주" | "footnote" | "ref" => {dont_have_argument(tempvec, &mut temp, MacroType::Footnote)},
-                                                                        "목차" | "toc" | "topic" | "tableofcontents" => {dont_have_argument(tempvec, &mut temp, MacroType::Topic)},
-                                                                        "개행" | "br" => {dont_have_argument(tempvec, &mut temp, MacroType::BreakLine)},
-                                                                        "삽입" | "include" => {have_argument(tempvec, &mut temp, MacroType::Include)},
-                                                                        "age" | "나이" => {have_argument(tempvec, &mut temp, MacroType::Include)},
-                                                                        "date" | "datetime" | "시간" => {dont_have_argument(tempvec, &mut temp, MacroType::Date)},
-                                                                        "dday" | "디데이" => {have_argument(tempvec, &mut temp, MacroType::Dday)},
-                                                                        "clearfix" | "플로우 속성 초기화" | "클픽" | "클리어픽스" => {dont_have_argument(tempvec, &mut temp, MacroType::ClearFix)},
-                                                                        "yt" | "유튶" | "유튜브" | "youtube" => {have_argument(tempvec, &mut temp, MacroType::Youtube)},
-                                                                        "카카오티비" | "kakaotv" | "카카오tv" => {have_argument(tempvec, &mut temp, MacroType::KakaoTV)},
-                                                                        "nicovideo" | "니코니코" /*| "니코카도 아보카도"*/ => {have_argument(tempvec, &mut temp, MacroType::NicoNicoTV)}, //이뭔씹.
-                                                                        "vimeo" | "비메오" => {have_argument(tempvec, &mut temp, MacroType::Vimeo)},
-                                                                        "navertv" | "네이버티비" => {have_argument(tempvec, &mut temp, MacroType::NaverTV)},
-                                                                        "anchor" | "링크북마크" | "엥커" => {have_argument(tempvec, &mut temp, MacroType::Anchor)}
-                                                                        "펼접" => {dont_have_argument(tempvec, &mut temp, MacroType::펼접)},
-                                                                        _ => {unexpected_macro(&mut temp, tempvec)}
-                                                                    }
-                                                                },
-                                                                _ => {unexpected_macro(&mut temp, tempvec)}
-                                                            }
-                                                        },
-                                                        Objects::Tokens(_tokens) => {unexpected_macro(&mut temp, tempvec)},
-                                                    }
-                                                },
-                                                None => {unexpected_macro(&mut temp, tempvec)},
-                                            }
+                                            if let Some(Objects::RenderObject(RenderObject::Literal(literal)) = tempvec.first() {
+                                                match literal.literal.to_lowercase().as_str() { //메치문에서 or 어케씀???
+                                                    "각주" | "footnote" | "ref" => {dont_have_argument(tempvec, &mut temp, MacroType::Footnote)},
+                                                    "목차" | "toc" | "topic" | "tableofcontents" => {dont_have_argument(tempvec, &mut temp, MacroType::Topic)},
+                                                    "개행" | "br" => {dont_have_argument(tempvec, &mut temp, MacroType::BreakLine)},
+                                                    "삽입" | "include" => {have_argument(tempvec, &mut temp, MacroType::Include)},
+                                                    "age" | "나이" => {have_argument(tempvec, &mut temp, MacroType::Include)},
+                                                    "date" | "datetime" | "시간" => {dont_have_argument(tempvec, &mut temp, MacroType::Date)},
+                                                    "dday" | "디데이" => {have_argument(tempvec, &mut temp, MacroType::Dday)},
+                                                    "clearfix" | "플로우 속성 초기화" | "클픽" | "클리어픽스" => {dont_have_argument(tempvec, &mut temp, MacroType::ClearFix)},
+                                                    "yt" | "유튶" | "유튜브" | "youtube" => {have_argument(tempvec, &mut temp, MacroType::Youtube)},
+                                                    "카카오티비" | "kakaotv" | "카카오tv" => {have_argument(tempvec, &mut temp, MacroType::KakaoTV)},
+                                                    "nicovideo" | "니코니코" /*| "니코카도 아보카도"*/ => {have_argument(tempvec, &mut temp, MacroType::NicoNicoTV)}, //이뭔씹.
+                                                    "vimeo" | "비메오" => {have_argument(tempvec, &mut temp, MacroType::Vimeo)},
+                                                    "navertv" | "네이버티비" => {have_argument(tempvec, &mut temp, MacroType::NaverTV)},
+                                                    "anchor" | "링크북마크" | "엥커" => {have_argument(tempvec, &mut temp, MacroType::Anchor)}
+                                                    "펼접" => {dont_have_argument(tempvec, &mut temp, MacroType::펼접)},
+                                                    _ => {unexpected_macro(&mut temp, tempvec)}
+                                                }
+                                            } else {unexpected_macro(&mut temp, tempvec)}
                                         }
                                     }
                                     None => {
