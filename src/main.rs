@@ -1,3 +1,4 @@
+#![feature(slice_split_once)] // fuck
 mod toskens;
 mod lexer;
 mod parser;
@@ -32,7 +33,7 @@ impl Compiler {
 }
 
 fn main() {
-    let asdf = String::from("[inclUdee(stdio.h)]");
+    let asdf = String::from("== 오 이러면 여기서 개행을 하는 꼼수가 가능하네 [inclUde(stdio.h)] 근데 뭐다? 내 알빠 아니다~ ==");
     let mut lexer = Compiler::new(asdf);
     let start = Instant::now();
     lexer.lex();

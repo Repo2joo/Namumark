@@ -174,10 +174,38 @@ impl Compiler {
                                     }
                                 }
                             }, //match macroClose
+                            Tokens::LinkClose => {
+                                let expect = expected_token.iter().enumerate().rfind(|&(ref _i, &ref x)| *x == Tokens::LinkClose); //fuck
+                                match expect {
+                                    Some((i, _value)) => {
+                                        let mut tempvec = temp.get(i).unwrap().to_owned();
+                                        if i != expected_token.len() {
+                                            for i in i+1..expected_token.len() {
+                                                tempvec.push(expected_token.get(i).unwrap().to_owned().to_literal());
+                                                tempvec.extend(temp.get(i).unwrap().to_owned());
+                                            }
+                                            for _ in i..expected_token.len() {
+                                                temp.pop();
+                                                expected_token.pop();
+                                            }
+                                            let  = tempvec.split_once(|object| object == &Objects::Tokens(Tokens::PipeLine)); //슬라이스를 스플릿 하는건 불안정한 기능임. 나중에 삭제되면 크레이트라도 써야지...
+                                            //밥먹으로ㅓ 떠남
+                                        }
+                                    }
+                                    None => {
+                                        temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Literal(Literal {literal:String::from("]]")})));
+                                    },
+                                }
+                            }, //match macroClose
+                            Tokens::LinkOpen => {
+                                temp.push(Vec::new());
+                                expected_token.push(Tokens::LinkOpen);
+                            }, //match macroClose
                             Tokens::Nop => {
                                 break;
                             },
-                            //몇몇 리터럴이 되면 안되는 토큰들
+                            //몇몇 리터럴이 되면 안되는 토큰들 ~~생각해보니까 다 리터럴이 되면 안되긴 해~~ 그럼 왜 나머지 케이스로 안하냐고? 혹시 모르잖아~
+                            Tokens::PipeLine => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::PipeLine))},
                             Tokens::Sharp => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Sharp))},
                             Tokens::Sad => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Sad))},
                             Tokens::Happy => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Happy))},
