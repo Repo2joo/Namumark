@@ -33,7 +33,7 @@ impl Compiler {
 }
 
 fn main() {
-    let asdf = String::from("[[link[[fldzm]]]]");
+    let asdf = String::from("[[link|[[파일:준됴]]]]");
     let mut lexer = Compiler::new(asdf);
     let start = Instant::now();
     lexer.lex();
