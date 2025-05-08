@@ -33,7 +33,7 @@ impl Compiler {
 }
 
 fn main() {
-    let asdf = String::from("[br]");
+    let asdf = String::from("{{{#!");
     let mut lexer = Compiler::new(asdf);
     let start = Instant::now();
     lexer.lex();

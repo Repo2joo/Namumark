@@ -144,7 +144,13 @@ impl Compiler {
                               '{' => {
                                   count += 1;
                                   if count == 3 {
-                                      self.tokens.push(Tokens::TripleOpen);
+                                      if self.nexto(1) == '#' && self.nexto(2) == '!' {
+                                        self.tokens.push(Tokens::ShBoom);
+                                        self.inc();
+                                        self.inc();
+                                      } else {
+                                        self.tokens.push(Tokens::TripleOpen);
+                                      }
                                   } 
                               },
                               _ => {
@@ -224,10 +230,6 @@ impl Compiler {
                           '#' => {
                               self.tokens.push(Tokens::Comment);
                               self.inc();
-                          },
-                          '!' => {
-                            self.tokens.push(Tokens::ShBoom);
-                            self.inc();
                           }
                           _ => {self.tokens.push(Tokens::Sharp)}
                       }

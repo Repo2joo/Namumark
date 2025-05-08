@@ -81,7 +81,7 @@ impl Tokens {
             Tokens::Happy => return String::from(")"),
             Tokens::Sad => return String::from("("),
             Tokens::Nop => return String::from("wtf"),
-            Tokens::ShBoom => return String::from("#!"), //Life could be suck~ Life could be suck~ do dodo do do shboom
+            Tokens::ShBoom => return String::from("{{{#!"), //Life could be suck~ Life could be suck~ do dodo do do shboom
             Tokens::Sharp => return String::from("#")
         }
     }
