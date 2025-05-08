@@ -7,6 +7,7 @@ impl Compiler {
             let parsed:Vec<Objects> = Vec::new();
             let mut temp: Vec<Vec<Objects>> = Vec::new();
             temp.push(parsed);
+            let mut pipelinecount = 0;
             let mut expected_token:Vec<Tokens> = vec![Tokens::Nop];
             loop {
                 match self.get_current() {
@@ -78,9 +79,9 @@ impl Compiler {
                                                     tempvec.remove(tempvec.len()-1);
                                                 }
                                                 temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Heading(Heading {
-                                                    folded:folded,
+                                                    folded,
                                                     render_objects:tempvec.clone(),
-                                                    level:level,
+                                                    level,
                                                 })));
                                             }
                                         } else {
@@ -97,10 +98,10 @@ impl Compiler {
                             }, //match header
                             Tokens::MacroOpen => {
                                 temp.push(Vec::new());
-                                expected_token.push(Tokens::MacroClose);
+                                expected_token.push(Tokens::MacroOpen);
                             }, //match macroOpen
                             Tokens::MacroClose => {
-                                let expect = expected_token.iter().enumerate().rfind(|&(ref _i, &ref x)| *x == Tokens::MacroClose); //fuck
+                                let expect = expected_token.iter().enumerate().find(|&(ref _i, &ref x)| *x == Tokens::MacroOpen); //fuck
                                 match expect {
                                     Some((i, _value)) => {
                                         let mut tempvec = temp.get(i).unwrap().to_owned();
@@ -113,7 +114,8 @@ impl Compiler {
                                                 temp.pop();
                                                 expected_token.pop();
                                             }
-                                            if let Some(Objects::RenderObject(RenderObject::Literal(literal)) = tempvec.first() {
+                                            println!("{:?}", tempvec);
+                                            if let Some(Objects::RenderObject(RenderObject::Literal(literal))) = tempvec.first() {
                                                 match literal.literal.to_lowercase().as_str() { //메치문에서 or 어케씀???
                                                     "각주" | "footnote" | "ref" => {dont_have_argument(tempvec, &mut temp, MacroType::Footnote)},
                                                     "목차" | "toc" | "topic" | "tableofcontents" => {dont_have_argument(tempvec, &mut temp, MacroType::Topic)},
@@ -148,7 +150,7 @@ impl Compiler {
                                     match (tempvec.get(1), tempvec.last().unwrap()) {
                                         (Some(object), lastobject) => {
                                             if object.to_owned() == Objects::Tokens(Tokens::Sad) && lastobject.to_owned() == Objects::Tokens(Tokens::Happy) {
-                                                temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro {typeofmacro: macrotype, argument:Some(render_raw((&tempvec[2..=tempvec.len()-2]).to_vec())) })));   
+                                                temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Macro(Macro {typeofmacro: macrotype, argument:Some(render_raw(&(&tempvec[2..=tempvec.len()-2]).to_vec())) })));   
                                             } else {unexpected_macro(temp, tempvec)}
                                         },
                                         (None, _) => {unexpected_macro(temp, tempvec)}
@@ -162,7 +164,13 @@ impl Compiler {
                                 }
                             }, //match macroClose
                             Tokens::LinkClose => {
-                                let expect = expected_token.iter().enumerate().rfind(|&(ref _i, &ref x)| *x == Tokens::LinkClose); //fuck
+                                let expect: Option<(usize, &Tokens)>; //fuck
+                                if pipelinecount != 0 {
+                                    expect = expected_token.iter().enumerate().rfind(|&(ref _i, &ref x)| *x == Tokens::LinkOpen);
+                                    pipelinecount -= 1;
+                                } else {
+                                    expect = expected_token.iter().enumerate().find(|&(ref _i, &ref x)| *x == Tokens::LinkOpen)
+                                }
                                 match expect {
                                     Some((i, _value)) => {
                                         let mut tempvec = temp.get(i).unwrap().to_owned();
@@ -175,7 +183,35 @@ impl Compiler {
                                                 temp.pop();
                                                 expected_token.pop();
                                             }
-                                            let  = tempvec.split_once(|object| object == &Objects::Tokens(Tokens::PipeLine)); //슬라이스를 스플릿 하는건 불안정한 기능임. 나중에 삭제되면 크레이트라도 써야지...
+                                            match tempvec.iter().enumerate().rfind(|(_index, x)| x.to_owned() == &Objects::Tokens(Tokens::PipeLine)) {
+                                                Some((index,_token )) => {
+                                                    let (a, b) = tempvec.split_at(index);
+                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Link(Link {
+                                                        to: render_raw(&a.to_vec()),
+                                                        typeoflink: get_link_type(&tempvec),
+                                                        view: Some(b[1..].to_vec())} 
+                                                    )));
+                                                },
+                                                None => {
+                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::Link(Link {
+                                                        to:render_raw(&tempvec), typeoflink: get_link_type(&tempvec), view: None 
+                                                    })));
+                                                },
+                                            }
+                                            fn get_link_type (tempvec: &Vec<Objects>) -> LinkType {
+                                                if let Some(Objects::RenderObject(RenderObject::Literal(literal))) = tempvec.first() {
+                                                    if literal.literal.to_lowercase().starts_with("file") || 
+                                                    literal.literal.to_lowercase().starts_with("파일") {
+                                                        return LinkType::Picture;
+                                                    } else if literal.literal.to_lowercase().starts_with("category") ||
+                                                    literal.literal.to_lowercase().starts_with("분류") {
+                                                        return LinkType::Cat;
+                                                    }
+                                                    return LinkType::Hyper;
+                                                } else {
+                                                    return LinkType::Hyper
+                                                }
+                                            }
                                             //밥먹으로ㅓ 떠남
                                         }
                                     }
@@ -192,7 +228,18 @@ impl Compiler {
                                 break;
                             },
                             //몇몇 리터럴이 되면 안되는 토큰들 ~~생각해보니까 다 리터럴이 되면 안되긴 해~~ 그럼 왜 나머지 케이스로 안하냐고? 혹시 모르잖아~
-                            Tokens::PipeLine => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::PipeLine))},
+                            Tokens::PipeLine => {
+                                let expect = expected_token.iter().enumerate().rfind(|&(ref _i, &ref x)| *x == Tokens::LinkOpen); //fuck
+                                match expect {
+                                    Some(_) => {
+                                        pipelinecount += 1;
+                                        temp.last_mut().unwrap().push(Objects::Tokens(Tokens::PipeLine))
+                                    },
+                                    None => {
+                                        temp.last_mut().unwrap().push(Tokens::PipeLine.to_literal())
+                                    }
+                                }
+                            }
                             Tokens::Sharp => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Sharp))},
                             Tokens::Sad => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Sad))},
                             Tokens::Happy => {temp.last_mut().unwrap().push(Objects::Tokens(Tokens::Happy))},
@@ -235,7 +282,8 @@ impl Compiler {
 pub enum RenderObject {
     Heading(Heading),
     Literal(Literal),
-    Macro(Macro)
+    Macro(Macro),
+    Link(Link)
 }
 #[derive(Debug,PartialEq,Clone)]
 pub enum Objects {
@@ -246,6 +294,12 @@ pub enum Objects {
 pub struct Macro {
     argument:Option<String>,
     typeofmacro:MacroType,
+}
+#[derive(Debug,PartialEq,Clone)]
+pub struct Link {
+    to:String,
+    typeoflink:LinkType,
+    view:Option<Vec<Objects>>
 }
 impl Macro {
     pub fn getarg(&self) -> Option<String> {
@@ -272,6 +326,13 @@ pub enum MacroType {
     Vimeo,
     NaverTV,
     펼접,
+}
+#[derive(Debug,PartialEq,Clone)]
+pub enum LinkType {
+    Hyper,
+    Picture,
+    Cat, //meow~
+    IsThereSomeThingElse //:D
 }
 #[derive(Debug,PartialEq,Clone)]
 pub struct Heading {
