@@ -145,7 +145,6 @@ impl Compiler {
                                                 temp.pop();
                                                 expected_token.pop();
                                             }
-                                            println!("{:?}", tempvec);
                                             if let Some(Objects::RenderObject(
                                                 RenderObject::Literal(literal),
                                             )) = tempvec.first()
