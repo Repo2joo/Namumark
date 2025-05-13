@@ -1,4 +1,4 @@
-use crate::{render::render_raw, toskens::Tokens, Compiler};
+use crate::{Compiler, render::render_raw, toskens::Tokens};
 impl Compiler {
     pub fn parse(&mut self) {
         self.token_to_objects();
@@ -130,7 +130,7 @@ impl Compiler {
                                 match expect {
                                     Some((i, _value)) => {
                                         let mut tempvec = temp.get(i).unwrap().to_owned();
-                                        if i != expected_token.len() {
+                                        if i != expected_token.len() - 1 {
                                             for i in i + 1..expected_token.len() {
                                                 tempvec.push(
                                                     expected_token
@@ -141,15 +141,16 @@ impl Compiler {
                                                 );
                                                 tempvec.extend(temp.get(i).unwrap().to_owned());
                                             }
-                                            for _ in i..expected_token.len() {
-                                                temp.pop();
-                                                expected_token.pop();
-                                            }
-                                            if let Some(Objects::RenderObject(
-                                                RenderObject::Literal(literal),
-                                            )) = tempvec.first()
-                                            {
-                                                match literal.literal.to_lowercase().as_str() { //메치문에서 or 어케씀???
+                                        }
+                                        for _ in i..expected_token.len() {
+                                            temp.pop();
+                                            expected_token.pop();
+                                        }
+                                        if let Some(Objects::RenderObject(RenderObject::Literal(
+                                            literal,
+                                        ))) = tempvec.first()
+                                        {
+                                            match literal.literal.to_lowercase().as_str() { //메치문에서 or 어케씀???
                                                     "각주" | "footnote" | "ref" => {dont_have_argument(tempvec, &mut temp, MacroType::Footnote)},
                                                     "목차" | "toc" | "topic" | "tableofcontents" => {dont_have_argument(tempvec, &mut temp, MacroType::Topic)},
                                                     "개행" | "br" => {dont_have_argument(tempvec, &mut temp, MacroType::BreakLine)},
@@ -164,12 +165,11 @@ impl Compiler {
                                                     "vimeo" | "비메오" => {have_argument(tempvec, &mut temp, MacroType::Vimeo)},
                                                     "navertv" | "네이버티비" => {have_argument(tempvec, &mut temp, MacroType::NaverTV)},
                                                     "anchor" | "링크북마크" | "엥커" => {have_argument(tempvec, &mut temp, MacroType::Anchor)}
-                                                    "펼접" => {dont_have_argument(tempvec, &mut temp, MacroType::펼접)},
+                                                    "펼접" => {dont_have_argument(tempvec, &mut temp, MacroType::펼접)}, //나중에 투표 추가할 예정
                                                     _ => {unexpected_macro(&mut temp, tempvec)}
                                                 }
-                                            } else {
-                                                unexpected_macro(&mut temp, tempvec)
-                                            }
+                                        } else {
+                                            unexpected_macro(&mut temp, tempvec)
                                         }
                                     }
                                     None => {
@@ -242,24 +242,29 @@ impl Compiler {
                                 }
                             } //match macroClose
                             Tokens::LinkClose => {
-                                let expect: Option<(usize, &Tokens)>; //fuck
-                                if pipelinecount != 0 {
-                                    expect = expected_token
-                                        .iter()
-                                        .enumerate()
-                                        .rfind(|&(ref _i, &ref x)| *x == Tokens::LinkOpen);
-                                    pipelinecount -= 1;
-                                } else {
-                                    expect = expected_token
-                                        .iter()
-                                        .enumerate()
-                                        .find(|&(ref _i, &ref x)| *x == Tokens::LinkOpen)
+                                let mut expect: Option<(usize, &Tokens)> = None; //fuck
+                                let mut last_found_index: Option<usize> = None;
+                                let mut index: usize = 0;
+                                for token in &expected_token {
+                                    if token == &Tokens::LinkOpen(false) {
+                                        expect = Some((index.into(), &Tokens::LinkOpen(false)));
+                                        break;
+                                    } else if token == &Tokens::LinkOpen(true) {
+                                        last_found_index = Some(index);
+                                    }
+                                    index += 1;
+                                }
+                                if expect == None && last_found_index != None {
+                                    expect = Some((
+                                        last_found_index.unwrap().into(),
+                                        expected_token.get(last_found_index.unwrap()).unwrap(),
+                                    ))
                                 }
                                 match expect {
                                     Some((i, _value)) => {
                                         let mut tempvec = temp.get(i).unwrap().to_owned();
-                                        if i != expected_token.len() {
-                                            for i in i + 1..expected_token.len() {
+                                        if i != expected_token.len() - 1 {
+                                            for i in i..expected_token.len() {
                                                 tempvec.push(
                                                     expected_token
                                                         .get(i)
@@ -269,69 +274,69 @@ impl Compiler {
                                                 );
                                                 tempvec.extend(temp.get(i).unwrap().to_owned());
                                             }
-                                            for _ in i..expected_token.len() {
-                                                temp.pop();
-                                                expected_token.pop();
+                                        }
+                                        for _ in i..expected_token.len() {
+                                            temp.pop();
+                                            expected_token.pop();
+                                        }
+                                        println!("{:?}", tempvec);
+                                        match tempvec.iter().enumerate().rfind(|(_index, x)| {
+                                            x.to_owned() == &Objects::Tokens(Tokens::PipeLine)
+                                        }) {
+                                            Some((index, _token)) => {
+                                                let (a, b) = tempvec.split_at(index);
+                                                temp.last_mut().unwrap().push(
+                                                    Objects::RenderObject(RenderObject::Link(
+                                                        Link {
+                                                            to: render_raw(&a.to_vec()),
+                                                            typeoflink: get_link_type(&tempvec),
+                                                            view: Some(b[1..].to_vec()),
+                                                        },
+                                                    )),
+                                                );
                                             }
-                                            match tempvec.iter().enumerate().rfind(|(_index, x)| {
-                                                x.to_owned() == &Objects::Tokens(Tokens::PipeLine)
-                                            }) {
-                                                Some((index, _token)) => {
-                                                    let (a, b) = tempvec.split_at(index);
-                                                    temp.last_mut().unwrap().push(
-                                                        Objects::RenderObject(RenderObject::Link(
-                                                            Link {
-                                                                to: render_raw(&a.to_vec()),
-                                                                typeoflink: get_link_type(&tempvec),
-                                                                view: Some(b[1..].to_vec()),
-                                                            },
-                                                        )),
-                                                    );
-                                                }
-                                                None => {
-                                                    temp.last_mut().unwrap().push(
-                                                        Objects::RenderObject(RenderObject::Link(
-                                                            Link {
-                                                                to: render_raw(&tempvec),
-                                                                typeoflink: get_link_type(&tempvec),
-                                                                view: None,
-                                                            },
-                                                        )),
-                                                    );
-                                                }
+                                            None => {
+                                                temp.last_mut().unwrap().push(
+                                                    Objects::RenderObject(RenderObject::Link(
+                                                        Link {
+                                                            to: render_raw(&tempvec),
+                                                            typeoflink: get_link_type(&tempvec),
+                                                            view: None,
+                                                        },
+                                                    )),
+                                                );
                                             }
-                                            fn get_link_type(tempvec: &Vec<Objects>) -> LinkType {
-                                                if let Some(Objects::RenderObject(
-                                                    RenderObject::Literal(literal),
-                                                )) = tempvec.first()
+                                        }
+                                        fn get_link_type(tempvec: &Vec<Objects>) -> LinkType {
+                                            if let Some(Objects::RenderObject(
+                                                RenderObject::Literal(literal),
+                                            )) = tempvec.first()
+                                            {
+                                                if literal
+                                                    .literal
+                                                    .to_lowercase()
+                                                    .starts_with("file")
+                                                    || literal
+                                                        .literal
+                                                        .to_lowercase()
+                                                        .starts_with("파일")
                                                 {
-                                                    if literal
+                                                    return LinkType::Picture;
+                                                } else if literal
+                                                    .literal
+                                                    .to_lowercase()
+                                                    .starts_with("category")
+                                                    || literal
                                                         .literal
                                                         .to_lowercase()
-                                                        .starts_with("file")
-                                                        || literal
-                                                            .literal
-                                                            .to_lowercase()
-                                                            .starts_with("파일")
-                                                    {
-                                                        return LinkType::Picture;
-                                                    } else if literal
-                                                        .literal
-                                                        .to_lowercase()
-                                                        .starts_with("category")
-                                                        || literal
-                                                            .literal
-                                                            .to_lowercase()
-                                                            .starts_with("분류")
-                                                    {
-                                                        return LinkType::Cat;
-                                                    }
-                                                    return LinkType::Hyper;
-                                                } else {
-                                                    return LinkType::Hyper;
+                                                        .starts_with("분류")
+                                                {
+                                                    return LinkType::Cat;
                                                 }
+                                                return LinkType::Hyper;
+                                            } else {
+                                                return LinkType::Hyper;
                                             }
-                                            //밥먹으로ㅓ 떠남
                                         }
                                     }
                                     None => {
@@ -343,11 +348,24 @@ impl Compiler {
                                     }
                                 }
                             } //match macroClose
-                            Tokens::LinkOpen => {
+                            Tokens::LinkOpen(_) => {
                                 temp.push(Vec::new());
-                                expected_token.push(Tokens::LinkOpen);
+                                expected_token.push(Tokens::LinkOpen(false));
                             } //match macroClose
                             Tokens::Nop => {
+                                let clone = temp.clone();
+                                for i in 1..expected_token.len() {
+                                    temp.first_mut().unwrap().push(
+                                        expected_token.get(i).unwrap().to_owned().to_literal(),
+                                    );
+                                    temp.first_mut()
+                                        .unwrap()
+                                        .extend(clone.get(i).unwrap().to_owned()); //소유권은 참 이상해
+                                }
+                                for _ in 1..expected_token.len() {
+                                    temp.pop();
+                                    expected_token.pop();
+                                }
                                 break;
                             }
                             //몇몇 리터럴이 되면 안되는 토큰들 ~~생각해보니까 다 리터럴이 되면 안되긴 해~~ 그럼 왜 나머지 케이스로 안하냐고? 혹시 모르잖아~
@@ -355,13 +373,14 @@ impl Compiler {
                                 let expect = expected_token
                                     .iter()
                                     .enumerate()
-                                    .rfind(|&(ref _i, &ref x)| *x == Tokens::LinkOpen); //fuck
+                                    .rfind(|&(ref _i, &ref x)| *x == Tokens::LinkOpen(false)); //fuck
                                 match expect {
-                                    Some(_) => {
+                                    Some((i, _token)) => {
                                         pipelinecount += 1;
                                         temp.last_mut()
                                             .unwrap()
-                                            .push(Objects::Tokens(Tokens::PipeLine))
+                                            .push(Objects::Tokens(Tokens::PipeLine));
+                                        expected_token[i] = Tokens::LinkOpen(true);
                                     }
                                     None => {
                                         temp.last_mut().unwrap().push(Tokens::PipeLine.to_literal())

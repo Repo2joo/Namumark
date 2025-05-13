@@ -1,53 +1,53 @@
 use crate::parser::{Literal, Objects, RenderObject};
 
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Tokens {
-    Bold, // '''
-    BoldItalic, // '''''
-    Comment, // ## 
-    DeletedBar, // --
-    DeletedWave, // ~~
-    Escape(char), // \
-    FixedComment, // @##
-    Header(u8), // =
-    Italic, // ''
-    UnderLine, // __
-    Sup, // &&
-    Sub, //,,
-    TripleClose, // }}}
-    TripleOpen, // {{{
-    LinkOpen, // ]]
-    LinkClose, // [[
-    MacroOpen, // [
-    MacroClose, // ]
-    StarList, // * 
-    Reference, // [* ]
-    Quote(u8), // >
-    Horizon, //수평선 문법이 기억이 안남
-    PipeLine, // |
-    TablePipe, // ||
+    Bold,            // '''
+    BoldItalic,      // '''''
+    Comment,         // ##
+    DeletedBar,      // --
+    DeletedWave,     // ~~
+    Escape(char),    // \
+    FixedComment,    // @##
+    Header(u8),      // =
+    Italic,          // ''
+    UnderLine,       // __
+    Sup,             // &&
+    Sub,             //,,
+    TripleClose,     // }}}
+    TripleOpen,      // {{{
+    LinkOpen(bool),  // ]]
+    LinkClose,       // [[
+    MacroOpen,       // [
+    MacroClose,      // ]
+    StarList,        // *
+    Reference,       // [* ]
+    Quote(u8),       // >
+    Horizon,         //수평선 문법이 기억이 안남
+    PipeLine,        // |
+    TablePipe,       // ||
     Literal(String), //String
-    NewLine, // \n
-    Space, // ' '
-    Happy, // )
-    Sad, // (
+    NewLine,         // \n
+    Space,           // ' '
+    Happy,           // )
+    Sad,             // (
     Nop,
     ShBoom,
     Sharp,
 } //리다이렉트는 따로 처리할 예정
 impl Default for Tokens {
     fn default() -> Self {
-        return Tokens::Nop
+        return Tokens::Nop;
     }
 }
-fn sarade () {
+fn sarade() {
     println!("이거 보면 사라다빵 사줘. (뭔지 모름)")
 }
 impl Tokens {
     pub fn to_literal(&self) -> Objects {
-        return Objects::RenderObject(RenderObject::Literal(Literal {literal:self.to_string()}));
+        return Objects::RenderObject(RenderObject::Literal(Literal {
+            literal: self.to_string(),
+        }));
     }
     pub fn to_string(&self) -> String {
         match self {
@@ -65,13 +65,13 @@ impl Tokens {
             Tokens::Sub => return String::from(",,"),
             Tokens::TripleClose => return String::from("}}}"),
             Tokens::TripleOpen => return String::from("{{{"),
-            Tokens::LinkOpen => return String::from("[["),
+            Tokens::LinkOpen(_) => return String::from("[["),
             Tokens::LinkClose => return String::from("]]"),
             Tokens::MacroOpen => return String::from("["),
             Tokens::MacroClose => return String::from("]"),
             Tokens::StarList => return String::from("*"),
             Tokens::Reference => return String::from("[*"),
-            Tokens::Quote(_) => return String::from(">"),
+            Tokens::Quote(level) => return String::from(">".repeat((*level).into())),
             Tokens::Horizon => return String::from("----"),
             Tokens::PipeLine => return String::from("|"),
             Tokens::TablePipe => return String::from("||"),
@@ -82,7 +82,7 @@ impl Tokens {
             Tokens::Sad => return String::from("("),
             Tokens::Nop => return String::from("wtf"),
             Tokens::ShBoom => return String::from("{{{#!"), //Life could be suck~ Life could be suck~ do dodo do do shboom
-            Tokens::Sharp => return String::from("#")
+            Tokens::Sharp => return String::from("#"),
         }
     }
 }
