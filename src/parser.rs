@@ -347,7 +347,7 @@ impl Compiler {
                                         ));
                                     }
                                 }
-                            } //match macroClose
+                            } //match LinkClose. 지금 이거에 약간 심각한 문제가 있는데 그거 해결하려면 파서 개발을 접고 싶어짐으로 딴거 할꺼임 라고 적는 동안 OS 텀이 돌았어. OS배울꺼임
                             Tokens::LinkOpen(_) => {
                                 temp.push(Vec::new());
                                 expected_token.push(Tokens::LinkOpen(false));
