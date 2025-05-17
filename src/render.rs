@@ -19,7 +19,13 @@ pub fn render_raw(vector: &Vec<Objects>) -> String {
                     string.push_str("음");
                 }
                 crate::parser::RenderObject::Link(link) => {
-                    string.push_str("notm ade");
+                    string.push_str("not made");
+                },
+                crate::parser::RenderObject::NoWiki(nowiki) => {
+                    string.push_str(&format!("{{{{{{{}}}}}}}"/*Holy shit */, render_raw(&nowiki.get_objects())));
+                },
+                crate::parser::RenderObject::ShBoom(shboom) => {
+                    string.push_str(&format!("{{{{{{#!{} {}}}}}}}", shboom.));
                 }
             },
             Objects::Tokens(tokens) => string.push_str(&tokens.to_string()),

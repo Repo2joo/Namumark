@@ -14,6 +14,8 @@ A namumark renderer made with Rust
 <br /><br />
 코드 가독성은 개나 줘버리고 함수 많이써서 만들꺼임. 파서 훅이랑 prio를 잘 해서 하면 되지 않을까.<br />
 문법 하나를 처리하는 코드의 흐름은 비슷한데 대부분
+<br /><br />
+이 코드에서 shboom = sheberg
 # Why rust?
 - 웹어셈 컴파일 가능
 - 빠름(지 않을까)

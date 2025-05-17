@@ -386,6 +386,72 @@ impl Compiler {
                                         temp.last_mut().unwrap().push(Tokens::PipeLine.to_literal())
                                     }
                                 }
+                            },
+                            Tokens::ShBoom => {
+                                temp.push(Vec::new());
+                                expected_token.push(Tokens::ShBoom);
+                            },
+                            Tokens::TripleClose => {
+                                let expect = expected_token
+                                    .iter()
+                                    .enumerate()
+                                    .find(|&(ref _i, &ref x)| *x == Tokens::MacroOpen); //fuck
+                                match expect {
+                                    Some((i, _value)) => {
+                                        let mut tempvec = temp.get(i).unwrap().to_owned();
+                                        if i != expected_token.len() - 1 {
+                                            for i in i + 1..expected_token.len() {
+                                                tempvec.push(
+                                                    expected_token
+                                                        .get(i)
+                                                        .unwrap()
+                                                        .to_owned()
+                                                        .to_literal(),
+                                                );
+                                                tempvec.extend(temp.get(i).unwrap().to_owned());
+                                            }
+                                        }
+                                        for _ in i..expected_token.len() {
+                                            temp.pop();
+                                            expected_token.pop();
+                                        }
+                                        if let Some(Objects::RenderObject(RenderObject::Literal(Literal { literal }))) = tempvec.first() {
+                                            match literal.to_lowercase().as_str() {
+                                                "wiki" | "folding" | "syntax" /*| "oiiaiioiiiaii" | "synTeX"*/ | "if" => { //여기서 if문은 따로 파서를 만들어서 (씨발) 돌아야 하지 않을까
+                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::ShBoom(LifeCouldBeADream {objects:tempvec[2..].to_vec(), name:literal.to_owned(), typeof_life_could_be_adream: return_typeof_life_could_be_adream(literal.to_owned()) })));
+                                                },
+                                                _ => {
+                                                    temp.last_mut().unwrap().push(Objects::RenderObject(RenderObject::NoWiki(NoWiki { objects: tempvec })));
+                                                }
+                                            }
+                                            fn return_typeof_life_could_be_adream(name:String) -> TypeOfLifeCouldBeADream {
+                                                match name.to_lowercase().as_str() {
+                                                    "wiki" => return TypeOfLifeCouldBeADream::Wiki,
+                                                    "folding" => return TypeOfLifeCouldBeADream::Folding,
+                                                    "syntax" => return TypeOfLifeCouldBeADream::SynTeX, //sus
+                                                    "if" => return TypeOfLifeCouldBeADream::If,
+                                                    _ => {panic!("Parser Paniced because return type doesn't exist. but how??? If you see this message NOT IN THE SOURCE CODE, connect hazer24879@gmail.com
+파서가 예상치 못한 오류를 일으켰습니다. hazer24879@gmail.com에 연락해주세요. 근데 진짜 예상치 못한 이유이긴 해
+                                                    ")}
+                                                }
+                                            }
+                                        } else {
+                                            temp.last_mut().unwrap().push(Objects::RenderObject(
+                                                RenderObject::Literal(Literal {
+                                                    literal: String::from("}}}"),
+                                                }),
+                                            )); 
+                                        }
+                                        
+                                    }
+                                    None => {
+                                        temp.last_mut().unwrap().push(Objects::RenderObject(
+                                            RenderObject::Literal(Literal {
+                                                literal: String::from("}}}"),
+                                            }),
+                                        ));
+                                    }
+                                }
                             }
                             Tokens::Sharp => temp
                                 .last_mut()
@@ -443,6 +509,8 @@ pub enum RenderObject {
     Literal(Literal),
     Macro(Macro),
     Link(Link),
+    NoWiki(NoWiki),
+    ShBoom(LifeCouldBeADream)
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum Objects {
@@ -459,6 +527,21 @@ pub struct Link {
     to: String,
     typeoflink: LinkType,
     view: Option<Vec<Objects>>,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct NoWiki {
+    objects:Vec<Objects>
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct LifeCouldBeADream {
+    objects:Vec<Objects>,
+    name:String,
+    typeof_life_could_be_adream:TypeOfLifeCouldBeADream
+}
+impl NoWiki {
+    pub fn get_objects(&self) -> Vec<Objects> {
+        return self.objects.clone()
+    }
 }
 impl Macro {
     pub fn getarg(&self) -> Option<String> {
@@ -485,6 +568,13 @@ pub enum MacroType {
     Vimeo,
     NaverTV,
     펼접,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub enum TypeOfLifeCouldBeADream { //fuck~
+    SynTeX, //sus
+    If,
+    Wiki,
+    Folding
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum LinkType {
