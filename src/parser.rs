@@ -9,12 +9,15 @@ fn parsing_listener(compiler: &mut Compiler, close: Expect, namumarkresult: Vec<
     match close {
         Expect::None => {
             *result = RenderObject::NopNopNop;
-            *compiler.array = namumarkresult},
-        Expect::Link => *result = RenderObject::Link(Link {
-            to: String::new(),
-            show: Some(Vec::new()),
-            link_type: LinkType::Hyper,
-        }),
+            *compiler.array = namumarkresult;},
+        Expect::Link => {
+            *result = RenderObject::Link(Link {
+                to: String::new(),
+                show: Some(Vec::new()),
+                link_type: LinkType::Hyper,
+            })
+            compiler.lastrollbackindex.push(compiler.index);
+        },
         Expect::Link2 => panic!(),
     }
 }
