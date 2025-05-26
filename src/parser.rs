@@ -7,7 +7,9 @@ pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
 }
 fn parsing_listener(compiler: &mut Compiler, close: Expect, namumarkresult: Vec<Objects>, result:&mut RenderObject) {
     match close {
-        Expect::None => *result = RenderObject::NopNopNop,
+        Expect::None => {
+            *result = RenderObject::NopNopNop;
+            *compiler.array = namumarkresult},
         Expect::Link => *result = RenderObject::Link(Link {
             to: String::new(),
             show: Some(Vec::new()),
