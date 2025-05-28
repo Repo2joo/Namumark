@@ -37,26 +37,32 @@ fn namumarker(
     if let Some(Objects::Char(ch)) = compiler.current() {
         let ch = ch.to_owned();
         if ch == ']' && compiler.peak("]]") { //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
-                if *close == Expect::Link2 || *close == Expect::Link {
-                    compiler.index += 2;
-                    compiler.lastrollbackindex.pop();
-                    return false;
-                } else if compiler.expected.contains(&Expect::Link) || compiler.expected.contains(&Expect::Link2) {
-                    *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
-                    compiler.index += 2;
-                    return false;
-                } else {
-                    namumarkresult.push(Objects::Char(']'));
-                    namumarkresult.push(Objects::Char(']'));
-                }
+            if *close == Expect::Link2 || *close == Expect::Link {
                 compiler.index += 2;
-            } else if matches!(close, Expect::Link) {
+                compiler.lastrollbackindex.pop();
+                if let RenderObject::Link(link) = result{
+                    link.show = Some(namumarkresult.to_vec());
+                } else {
+                    panic!("내 생각 안에서는 불가능한데");
+                }
+                return false;
+            } else if compiler.expected.contains(&Expect::Link) || compiler.expected.contains(&Expect::Link2) {
+                *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
+                compiler.index += 2;
+                return false;
+            } else {
+                namumarkresult.push(Objects::Char(']'));
+                namumarkresult.push(Objects::Char(']'));
+            }
+            compiler.index += 2;
+        } else if matches!(close, Expect::Link) {
             if let RenderObject::Link(link) = result {
                 if ch == '|' {
                     *close = Expect::Link2;
                     compiler.index += 1;
                 } else {
                     link.to.push(ch);
+                    compiler.index += 1;
                 }
                 // println!("{}", ch); 이럼 왜 소유권 안넘어감??? A:Copy trait을 만족시켜서
             } else {
@@ -70,6 +76,8 @@ fn namumarker(
                 thisparsing = Some(parse_first(compiler, Expect::Link));
             } else {
                 namumarkresult.push(Objects::Char(ch));
+                compiler.index += 1;
+                true;
             }
 
             return if let Some(rendobj) = thisparsing {
@@ -103,7 +111,7 @@ fn namumarker(
                             }
                         } else {
                             namumarkresult.extend(tuple.1);
-                            *result = RenderObject::EarlyParse((tuple.0, namumarkresult.to_vec()));
+                            *result = RenderObject::EarlyParse((tuple.0, a_whole_my_vec(&result, &namumarkresult, &close)));
                             return false;
                         }
                     } //[[ {{{#!wiki 안녕]] }}} 대충 이런거 처리용
@@ -111,9 +119,50 @@ fn namumarker(
                     obj => {namumarkresult.push(Objects::RenderObject(obj)); true}
                 }
             } else {
-                false
-            }
+                true
+            };
+        }
+    } else {
+        if *close == Expect::None {
+            compiler.array = namumarkresult.to_vec();
+            *result = RenderObject::NopNopNop;
+            return false;
+        } else {
+            *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
+            return false;
         }
     }
     return true;
+}
+fn a_whole_my_vec (result: &RenderObject, namumarkresult: &Vec<Objects>, close:&Expect) -> Vec<Objects> {
+    match close {
+        Expect::Link => {
+            let mut resultt = vec![Objects::Char('['), Objects::Char('[')];
+            if let RenderObject::Link(link) = result {
+                resultt.extend_from_slice(&slices(link.to.clone()));
+            } else {
+                panic!();
+            };
+            return resultt;
+        },
+        Expect::Link2 => {
+            let mut resultt = namumarkresult.to_vec();
+            if let RenderObject::Link(link) = result {
+                resultt.extend_from_slice(&slices(link.to.clone()));
+            } else {
+                panic!();
+            };
+            return resultt;
+        },
+        _ => {
+            panic!("이거나 먹어라");
+        }
+    }
+}
+fn slices(s:String) -> Vec<Objects> {
+    let mut result: Vec<Objects> = Vec::new();
+    for i in s.chars() {
+        result.push(Objects::Char(i));
+    }
+    result
 }
