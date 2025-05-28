@@ -36,7 +36,17 @@ fn namumarker(
 ) -> bool {
     if let Some(Objects::Char(ch)) = compiler.current() {
         let ch = ch.to_owned();
-        if matches!(close, Expect::Link) {
+        if ch == ']' && compiler.peak("]]") { //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
+                if *close == Expect::Link2 {
+
+                } else if compiler.expected.contains(&Expect::Link2) { //Link1은 여기에 오면 안됨
+                    
+                } else {
+                    namumarkresult.push(Objects::Char(']'));
+                    namumarkresult.push(Objects::Char(']'));
+                }
+                compiler.index += 2;
+            } else if matches!(close, Expect::Link) {
             if let RenderObject::Link(link) = result {
                 if ch == '|' {
                     *close = Expect::Link2;
@@ -58,16 +68,6 @@ fn namumarker(
                 compiler.index += 2;
                 compiler.lastrollbackindex.push(compiler.index);
                 thisparsing = Some(parse_first(compiler, Expect::Link));
-            } else if ch == ']' && compiler.peak("]]") { //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
-                if *close == Expect::Link2 {
-
-                } else if compiler.expected.contains(&Expect::Link2) { //Link1은 여기에 오면 안됨
-                    
-                } else {
-                    namumarkresult.push(Objects::Char(']'));
-                    namumarkresult.push(Objects::Char(']'));
-                }
-                compiler.index += 2;
             } else {
                 namumarkresult.push(Objects::Char(ch));
             }
