@@ -37,10 +37,14 @@ fn namumarker(
     if let Some(Objects::Char(ch)) = compiler.current() {
         let ch = ch.to_owned();
         if ch == ']' && compiler.peak("]]") { //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
-                if *close == Expect::Link2 {
-
-                } else if compiler.expected.contains(&Expect::Link2) { //Link1은 여기에 오면 안됨
-                    
+                if *close == Expect::Link2 || *close == Expect::Link {
+                    compiler.index += 2;
+                    compiler.lastrollbackindex.pop();
+                    return false;
+                } else if compiler.expected.contains(&Expect::Link) || compiler.expected.contains(&Expect::Link2) {
+                    *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
+                    compiler.index += 2;
+                    return false;
                 } else {
                     namumarkresult.push(Objects::Char(']'));
                     namumarkresult.push(Objects::Char(']'));
@@ -51,10 +55,6 @@ fn namumarker(
                 if ch == '|' {
                     *close = Expect::Link2;
                     compiler.index += 1;
-                } else if ch == ']' && compiler.peak("]]") {
-                    compiler.index += 2;
-                    compiler.lastrollbackindex.pop();
-                    return false;
                 } else {
                     link.to.push(ch);
                 }
@@ -87,7 +87,26 @@ fn namumarker(
                         *result = RenderObject::NopForLink;
                         return false;
                     },
-                    RenderObject::EarlyParse(tuple) => {todo!()} //[[ {{{#!wiki 안녕]] }}} 대충 이런거 처리용
+                    RenderObject::EarlyParse(tuple) => {
+                        if tuple.0 == *close {
+                            match tuple.0 {
+                                Expect::None => {
+                                  panic!("아 그거 여기서 처리하는거 아닌데 ㅋㅋㄹㅃㅃㅃㅃ");  
+                                },
+                                Expect::Link2 => { //생각해보니까 link는 earlyparse될 일이 없잖아
+                                    if let RenderObject::Link(link) = result {
+                                        link.show.as_mut().unwrap().extend(tuple.1.to_vec());
+                                    } else {panic!()}
+                                    return false;
+                                },
+                                _ => panic!(), //여기서 처리하는 건 없음
+                            }
+                        } else {
+                            namumarkresult.extend(tuple.1);
+                            *result = RenderObject::EarlyParse((tuple.0, namumarkresult.to_vec()));
+                            return false;
+                        }
+                    } //[[ {{{#!wiki 안녕]] }}} 대충 이런거 처리용
                     RenderObject::NopNopNop => panic!("이게 뭐하는 베리언트였더라"),
                     obj => {namumarkresult.push(Objects::RenderObject(obj)); true}
                 }
