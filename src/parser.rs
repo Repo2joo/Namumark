@@ -3,11 +3,13 @@ use core::panic;
 use crate::structs::{Compiler, Expect, Link, LinkType, Objects, RenderObject};
 
 pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
+    println!("총 3번, close:{:?}", close);
     let mut namumarkresult: Vec<Objects> = Vec::new();
     let mut result: RenderObject = RenderObject::NopNopNop;
     let mut close = close;
     parsing_listener(compiler, &close, &namumarkresult, &mut result);
-    while namumarker(compiler, &mut close, &mut namumarkresult, &mut result) {};
+    while namumarker(compiler, &mut close, &mut namumarkresult, &mut result) {println!("{}", compiler.index)};
+    println!("close:{:?} 함수 종료됨", close);
     result
 }
 fn parsing_listener(
@@ -73,7 +75,9 @@ fn namumarker(
             if ch == '[' && compiler.peak("[[") {
                 compiler.index += 2;
                 compiler.lastrollbackindex.push(compiler.index);
+                compiler.expected.push(Expect::Link);
                 thisparsing = Some(parse_first(compiler, Expect::Link));
+                println!("{:?}", thisparsing);
             } else {
                 namumarkresult.push(Objects::Char(ch));
                 compiler.index += 1;
@@ -88,10 +92,13 @@ fn namumarker(
                         false
                     },
                     RenderObject::NopForLink => {
-                        if *close == Expect::Link2 && compiler.lastrollbackindex.len() == 1 {
+                        println!("wait{:?}, {}", close, compiler.lastrollbackindex.len());
+                        if compiler.lastrollbackindex.len() == 1 {
+                            print!("ghjk");
                             compiler.index = *compiler.lastrollbackindex.last().unwrap();
                             return true
                         }
+                        compiler.lastrollbackindex.pop();
                         *result = RenderObject::NopForLink;
                         return false;
                     },
@@ -128,6 +135,16 @@ fn namumarker(
             *result = RenderObject::NopNopNop;
             return false;
         } else {
+            if (*close == Expect::Link2 || *close == Expect::Link) && compiler.lastrollbackindex.len() != 1 {
+                compiler.lastrollbackindex.pop();
+            }
+            if compiler.expected.contains(&Expect::Link) || compiler.expected.contains(&Expect::Link2) {
+                println!("a");
+                println!("{:?}", compiler.lastrollbackindex);
+                *result = RenderObject::NopForLink;
+                return false;
+            }
+            print!("{:?}", compiler.expected);
             *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
             return false;
         }
