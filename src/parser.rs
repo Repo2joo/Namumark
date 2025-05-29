@@ -3,13 +3,11 @@ use core::panic;
 use crate::structs::{Compiler, Expect, Link, LinkType, Objects, RenderObject};
 
 pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
-    println!("총 3번, close:{:?}", close);
     let mut namumarkresult: Vec<Objects> = Vec::new();
     let mut result: RenderObject = RenderObject::NopNopNop;
     let mut close = close;
     parsing_listener(compiler, &close, &namumarkresult, &mut result);
-    while namumarker(compiler, &mut close, &mut namumarkresult, &mut result) {println!("{}", compiler.index)};
-    println!("close:{:?} 함수 종료됨", close);
+    while namumarker(compiler, &mut close, &mut namumarkresult, &mut result) {if compiler.lastrollbackindex.len() == 61 {panic!("미완성인 리터럴을 이따구로 도베하는 것은 허용되지 않는답니다. 리터럴 처리를 꼭 해주세요")}};
     result
 }
 fn parsing_listener(
@@ -42,6 +40,7 @@ fn namumarker(
             if *close == Expect::Link2 || *close == Expect::Link {
                 compiler.index += 2;
                 compiler.lastrollbackindex.pop();
+                compiler.expected.pop();
                 if let RenderObject::Link(link) = result{
                     link.show = Some(namumarkresult.to_vec());
                 } else {
@@ -77,7 +76,6 @@ fn namumarker(
                 compiler.lastrollbackindex.push(compiler.index);
                 compiler.expected.push(Expect::Link);
                 thisparsing = Some(parse_first(compiler, Expect::Link));
-                println!("{:?}", thisparsing);
             } else {
                 namumarkresult.push(Objects::Char(ch));
                 compiler.index += 1;
@@ -87,15 +85,16 @@ fn namumarker(
             return if let Some(rendobj) = thisparsing {
                 match rendobj {
                     RenderObject::Nop(items) => {
+                        compiler.expected.pop();
                         namumarkresult.extend(items);
                         *result = RenderObject::Nop(namumarkresult.to_vec());
                         false
                     },
                     RenderObject::NopForLink => {
-                        println!("wait{:?}, {}", close, compiler.lastrollbackindex.len());
+                        compiler.expected.pop();
                         if compiler.lastrollbackindex.len() == 1 {
-                            print!("ghjk");
                             compiler.index = *compiler.lastrollbackindex.last().unwrap();
+                            compiler.lastrollbackindex.pop();
                             return true
                         }
                         compiler.lastrollbackindex.pop();
@@ -103,6 +102,7 @@ fn namumarker(
                         return false;
                     },
                     RenderObject::EarlyParse(tuple) => {
+                        compiler.expected.pop();
                         if tuple.0 == *close {
                             match tuple.0 {
                                 Expect::None => {
@@ -139,8 +139,6 @@ fn namumarker(
                 compiler.lastrollbackindex.pop();
             }
             if compiler.expected.contains(&Expect::Link) || compiler.expected.contains(&Expect::Link2) {
-                println!("a");
-                println!("{:?}", compiler.lastrollbackindex);
                 *result = RenderObject::NopForLink;
                 return false;
             }
