@@ -1,6 +1,6 @@
 use std::clone;
 
-use crate::parser::parse_first;
+use crate::{parser::parse_first, renderobjs::{Link, RenderObject, Syntax}};
 
 #[warn(irrefutable_let_patterns)] //ㅖㅖ..
 #[derive(Debug)]
@@ -16,31 +16,14 @@ pub enum Objects {
     RenderObject(RenderObject),
 }
 #[derive(Debug, PartialEq, Clone)]
-pub enum RenderObject {
-    Link(Link),
-    Nop(Vec<Objects>),
-    NopForLink,
-    NopNopNop,
-    EarlyParse((Expect, Vec<Objects>)) //우선순위 처리용
-}
-#[derive(Debug, PartialEq, Clone)]
-pub enum LinkType {
-    File,
-    Hyper,
-    Cat,
-}
-#[derive(Debug, PartialEq, Clone)]
-pub struct Link {
-    pub to: String,
-    pub show: Option<Vec<Objects>>,
-    pub link_type: LinkType,
-}
-
-#[derive(Debug, PartialEq, Clone)]
 pub enum Expect {
     None,
     Link,
     Link2,
+    SyntaxTriple,
+    TripleWithNamuMark,
+    TripleWithNamuMark2,
+    JustTriple,
 }
 impl Compiler {
     pub fn from(string: String) -> Compiler {
@@ -68,7 +51,7 @@ impl Compiler {
         let mut idx = 0;
         for ch in str.chars() {
             if let Some(Objects::Char(cha)) = self.get(self.index + idx) {
-                if ch != *cha {
+                if ch.to_lowercase().to_string() != *cha.to_lowercase().to_string() {
                     return false;
                 }
             } else {

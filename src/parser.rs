@@ -1,6 +1,6 @@
 use core::panic;
 
-use crate::structs::{Compiler, Expect, Link, LinkType, Objects, RenderObject};
+use crate::{renderobjs::{Languages, Link, LinkType, NamuTriple, RenderObject, Syntax}, structs::{Compiler, Expect, Objects}};
 
 pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
     let mut namumarkresult: Vec<Objects> = Vec::new();
@@ -19,13 +19,28 @@ fn parsing_listener(
     match close {
         Expect::None => *result = RenderObject::NopNopNop,
         Expect::Link => {
-            *result = RenderObject::Link(Link {
-                to: String::new(),
-                show: Some(Vec::new()),
-                link_type: LinkType::Hyper,
-            })
-        }
+                            *result = RenderObject::Link(Link {
+                                to: String::new(),
+                                show: Some(Vec::new()),
+                                link_type: LinkType::Hyper,
+                            })
+                }
         Expect::Link2 => panic!(),
+        Expect::SyntaxTriple => {
+                *result = RenderObject::Syntax(Syntax {
+                    language:Languages::NotSupported,
+                    content:String::new(),
+                })
+            },
+        Expect::TripleWithNamuMark => {
+            *result = RenderObject::NamuTriple(NamuTriple {
+                    triplename:String::new(),
+                    attr:String::new(),
+                    content:Vec::new(),
+                })
+        },
+        Expect::TripleWithNamuMark2 => panic!(),
+        Expect::JustTriple => todo!(),
     }
 }
 fn namumarker(
@@ -39,6 +54,26 @@ fn namumarker(
         if ch == ']' && compiler.peak("]]") { //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
             if *close == Expect::Link2 || *close == Expect::Link {
                 compiler.index += 2;
+                compiler.lastrollbackindex.pop();
+                compiler.expected.pop();
+                if let RenderObject::Link(link) = result{
+                    link.show = Some(namumarkresult.to_vec());
+                } else {
+                    panic!("내 생각 안에서는 불가능한데");
+                }
+                return false;
+            } else if compiler.expected.contains(&Expect::Link) || compiler.expected.contains(&Expect::Link2) {
+                *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
+                compiler.index += 2;
+                return false;
+            } else {
+                namumarkresult.push(Objects::Char(']'));
+                namumarkresult.push(Objects::Char(']'));
+            }
+            compiler.index += 2;
+        } else if ch == '}' &&  compiler.peak("}}}") {
+            if *close == Expect::JustTriple || *close == Expect::TripleWithNamuMark || *close == Expect::TripleWithNamuMark || *close == Expect::SyntaxTriple {
+                compiler.index += 3;
                 compiler.lastrollbackindex.pop();
                 compiler.expected.pop();
                 if let RenderObject::Link(link) = result{
@@ -76,6 +111,18 @@ fn namumarker(
                 compiler.lastrollbackindex.push(compiler.index);
                 compiler.expected.push(Expect::Link);
                 thisparsing = Some(parse_first(compiler, Expect::Link));
+            } else if ch == '{' && compiler.peak("{{{#!syntax ") {
+                compiler.index += 5;
+                compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
+                thisparsing = Some(parse_first(compiler, Expect::SyntaxTriple))
+            } else if ch == '{' && (compiler.peak("{{{#!wiki ") || compiler.peak("{{{#!if ") || compiler.peak("{{{#!folding ")) {
+                compiler.index += 5;
+                compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
+                thisparsing = Some(parse_first(compiler, Expect::TripleWithNamuMark))
+            } else if ch == '{' && compiler.peak("{{{") {
+                compiler.index += 5;
+                compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
+                thisparsing = Some(parse_first(compiler, Expect::JustTriple))
             } else {
                 namumarkresult.push(Objects::Char(ch));
                 compiler.index += 1;

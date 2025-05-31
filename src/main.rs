@@ -2,6 +2,7 @@ use std::time::Instant;
 
 use structs::Compiler;
 mod structs;
+mod renderobjs;
 
 mod parser;
 fn main() {
