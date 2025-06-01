@@ -72,23 +72,33 @@ fn namumarker(
             }
             compiler.index += 2;
         } else if ch == '}' &&  compiler.peak("}}}") {
-            if *close == Expect::JustTriple || *close == Expect::TripleWithNamuMark || *close == Expect::TripleWithNamuMark || *close == Expect::SyntaxTriple {
+            if *close == Expect::JustTriple || *close == Expect::TripleWithNamuMark2 || *close == Expect::TripleWithNamuMark || *close == Expect::SyntaxTriple {
                 compiler.index += 3;
                 compiler.lastrollbackindex.pop();
                 compiler.expected.pop();
-                if let RenderObject::Link(link) = result{
-                    link.show = Some(namumarkresult.to_vec());
-                } else {
-                    panic!("내 생각 안에서는 불가능한데");
+                match result {
+                    RenderObject::Syntax(_) => {
+                        return false; //이건 근데 ㄹㅇ 할깨 없음 신텍스는 문자열만 처리하는거라서
+                    },
+                    RenderObject::NamuTriple(namu_triple) => { //첫줄 리터럴, 두번째줄 나무마크인 것들
+                        namu_triple.content =Some(namumarkresult.to_vec());
+                        return false;
+                    },
+                    _ => {panic!()}
                 }
+            } else if compiler.expected.contains(&Expect::JustTriple) {
+                *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
+                compiler.index += 3;
                 return false;
-            } else if compiler.expected.contains(&Expect::Link) || compiler.expected.contains(&Expect::Link2) {
+            } else if compiler.expected.contains(&Expect::TripleWithNamuMark) || compiler.expected.contains(&Expect::TripleWithNamuMark2) || compiler.expected.contains(&Expect::SyntaxTriple) {
+                //이 contains구문 너무 비효울적임. find로 잘 ㅎ래서 함수화 하셈 TODO 
                 *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
                 compiler.index += 2;
                 return false;
             } else {
-                namumarkresult.push(Objects::Char(']'));
-                namumarkresult.push(Objects::Char(']'));
+                namumarkresult.push(Objects::Char('}'));
+                namumarkresult.push(Objects::Char('}'));
+                namumarkresult.push(Objects::Char('}'));
             }
             compiler.index += 2;
         } else if matches!(close, Expect::Link) {

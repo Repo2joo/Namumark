@@ -2,7 +2,6 @@ use std::clone;
 
 use crate::{parser::parse_first, renderobjs::{Link, RenderObject, Syntax}};
 
-#[warn(irrefutable_let_patterns)] //ㅖㅖ..
 #[derive(Debug)]
 pub struct Compiler {
     pub index: usize,

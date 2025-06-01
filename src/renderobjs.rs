@@ -46,6 +46,6 @@ pub enum Languages {
 #[derive(Debug, PartialEq, Clone)]
 pub struct NamuTriple {
     pub attr:String,
-    pub content: Vec<Objects>,
+    pub content: Option<Vec<Objects>>,
     pub triplename:String
 }
