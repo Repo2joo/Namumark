@@ -67,6 +67,7 @@ fn namumarker(
                 compiler.index += 2;
                 return false;
             } else {
+                compiler.index += 2;
                 namumarkresult.push(Objects::Char(']'));
                 namumarkresult.push(Objects::Char(']'));
             }
@@ -87,13 +88,17 @@ fn namumarker(
                     _ => {panic!()}
                 }
             } else if compiler.expected.contains(&Expect::JustTriple) {
-                *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
+                *result = RenderObject::EarlyParse((Expect::JustTriple, namumarkresult.to_vec()));
                 compiler.index += 3;
                 return false;
-            } else if compiler.expected.contains(&Expect::TripleWithNamuMark) || compiler.expected.contains(&Expect::TripleWithNamuMark2) || compiler.expected.contains(&Expect::SyntaxTriple) {
+            } else if compiler.expected.contains(&Expect::TripleWithNamuMark2) || compiler.expected.contains(&Expect::TripleWithNamuMark) {
+                *result = RenderObject::EarlyParse((Expect::TripleWithNamuMark, namumarkresult.to_vec()));
+                compiler.index += 3;
+                return false;
+            } else if compiler.expected.contains(&Expect::SyntaxTriple) {
                 //이 contains구문 너무 비효울적임. find로 잘 ㅎ래서 함수화 하셈 TODO 
                 *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
-                compiler.index += 2;
+                compiler.index += 3;
                 return false;
             } else {
                 namumarkresult.push(Objects::Char('}'));
