@@ -97,7 +97,7 @@ fn namumarker(
                 return false;
             } else if compiler.expected.contains(&Expect::SyntaxTriple) {
                 //이 contains구문 너무 비효울적임. find로 잘 ㅎ래서 함수화 하셈 TODO 
-                *result = RenderObject::EarlyParse((Expect::Link, namumarkresult.to_vec()));
+                *result = RenderObject::EarlyParse((Expect::SyntaxTriple, namumarkresult.to_vec()));
                 compiler.index += 3;
                 return false;
             } else {
