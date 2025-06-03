@@ -1,12 +1,14 @@
 use std::time::Instant;
 
 use structs::Compiler;
-mod structs;
 mod renderobjs;
+mod structs;
 
 mod parser;
 fn main() {
-    let teststr = "[[it[[works]]]]";
+    let teststr = "{{{#!wiki wst
+cak[[istyle}}}]]";
+
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();
     compiler.parse();

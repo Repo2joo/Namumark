@@ -1,6 +1,9 @@
 use std::clone;
 
-use crate::{parser::parse_first, renderobjs::{Link, RenderObject, Syntax}};
+use crate::{
+    parser::parse_first,
+    renderobjs::{Link, RenderObject, Syntax},
+};
 
 #[derive(Debug)]
 pub struct Compiler {
@@ -22,6 +25,7 @@ pub enum Expect {
     SyntaxTriple,
     TripleWithNamuMark,
     TripleWithNamuMark2,
+    TripleWithNamuMark3,
     JustTriple,
 }
 impl Compiler {
