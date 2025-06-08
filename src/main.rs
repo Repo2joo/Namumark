@@ -3,11 +3,14 @@ use std::time::Instant;
 use structs::Compiler;
 mod renderobjs;
 mod structs;
+mod traitt;
+#[cfg(test)]
+mod tests;
 
-mod parser;
+mod parser; //아 이거 복잡하다
 fn main() {
-    let teststr = "{{{#!wiki wst
-cak[[istyle}}}]]";
+    let teststr = "{{{#!wiki asdf}}}
+ghjk}}}";
 
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();

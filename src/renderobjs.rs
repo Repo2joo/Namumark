@@ -20,7 +20,7 @@ pub enum LinkType {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Link {
     pub to: String,
-    pub show: Option<Vec<Objects>>,
+    pub show: Vec<Objects>,
     pub link_type: LinkType,
 }
 

@@ -30,7 +30,7 @@ fn parsing_listener(
         Expect::Link => {
             *result = RenderObject::Link(Link {
                 to: String::new(),
-                show: Some(Vec::new()),
+                show: Vec::new(),
                 link_type: LinkType::Hyper,
             })
         }
@@ -68,7 +68,7 @@ fn namumarker(
                 compiler.lastrollbackindex.pop();
                 compiler.expected.pop();
                 if let RenderObject::Link(link) = result {
-                    link.show = Some(namumarkresult.to_vec());
+                    link.show = namumarkresult.to_vec();
                 } else {
                     panic!("내 생각 안에서는 불가능한데");
                 }
@@ -208,7 +208,6 @@ fn namumarker(
                 thisparsing = Some(parse_first(compiler, Expect::JustTriple))
             } else {
                 namumarkresult.push(Objects::Char(ch));
-                println!("{:?}", namumarkresult);
                 compiler.index += 1;
                 true;
             }
@@ -256,7 +255,7 @@ fn namumarker(
                                 Expect::Link2 => {
                                     //생각해보니까 link는 earlyparse될 일이 없잖아
                                     if let RenderObject::Link(link) = result {
-                                        link.show.as_mut().unwrap().extend(tuple.1.to_vec());
+                                        link.show.extend(tuple.1.to_vec());
                                     } else {
                                         panic!()
                                     }
@@ -434,7 +433,7 @@ fn a_whole_my_vec(
         }
     }
 }
-fn slices(s: String) -> Vec<Objects> {
+pub fn slices(s: String) -> Vec<Objects> {
     let mut result: Vec<Objects> = Vec::new();
     for i in s.chars() {
         result.push(Objects::Char(i));
