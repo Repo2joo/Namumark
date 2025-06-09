@@ -9,8 +9,7 @@ mod traitt;
 
 mod parser; //아 이거 복잡하다
 fn main() {
-    let teststr = "{{{#!wiki asdf}}}
-ghjk";
+    let teststr = "{{{안녕하세요}}}";
 
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();

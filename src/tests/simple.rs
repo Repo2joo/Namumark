@@ -112,3 +112,22 @@ content",
         slices("{{{#!WiKi attribute\ncontent".to_string())
     )
 }
+#[test]
+fn 트리플위키_속성에_삼중괄있음() {
+    //이게 놀랍게도 원작고증이라는...(씨ㅂ)
+    let mut compiler = Compiler::from(String::from(
+        "{{{#!WiKi attribute}}}
+content}}}",
+    ));
+    compiler.parse();
+    assert_eq!(
+        compiler.array,
+        vec![Objects::RenderObject(RenderObject::NamuTriple(
+            NamuTriple {
+                attr: Some(String::from("attribute}}}")),
+                content: Some(slices(String::from("content"))),
+                triplename: String::from("WiKi")
+            }
+        ))]
+    )
+}

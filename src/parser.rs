@@ -1,5 +1,7 @@
+//자 이건 내 마지막 경고오.
+//대략적인 파서의 알고리즘을 이해하고 오쇼.
+//그리고 여려움이 있으면 연락하쇼
 use core::panic;
-use std::ops::Index;
 
 use crate::{
     renderobjs::{Languages, Link, LinkType, NamuTriple, RenderObject, Syntax},
@@ -10,7 +12,7 @@ pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
     let mut namumarkresult: Vec<Objects> = Vec::new();
     let mut result: RenderObject = RenderObject::NopNopNop;
     let mut close = close;
-    parsing_listener(compiler, &close, &namumarkresult, &mut result);
+    parsing_listener(&close, &mut result);
     while namumarker(compiler, &mut close, &mut namumarkresult, &mut result) {
         if compiler.lastrollbackindex.len() == 61 {
             panic!(
@@ -21,9 +23,7 @@ pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
     result
 }
 fn parsing_listener(
-    compiler: &mut Compiler,
     close: &Expect,
-    namumarkresult: &Vec<Objects>,
     result: &mut RenderObject,
 ) {
     match close {
@@ -56,9 +56,9 @@ fn parsing_listener(
 }
 fn namumarker(
     compiler: &mut Compiler,
-    mut close: &mut Expect,
+    close: &mut Expect,
     namumarkresult: &mut Vec<Objects>,
-    mut result: &mut RenderObject,
+    result: &mut RenderObject,
 ) -> bool {
     if let Some(Objects::Char(ch)) = compiler.current() {
         let ch = ch.to_owned();
@@ -70,6 +70,12 @@ fn namumarker(
                 compiler.expected.pop();
                 if let RenderObject::Link(link) = result {
                     link.show = namumarkresult.to_vec();
+                    if link.to.starts_with("파일:") {
+                        link.link_type = LinkType::File
+                    }
+                    if link.to.starts_with("분류:") {
+                        link.link_type = LinkType::Cat
+                    }
                 } else {
                     panic!("내 생각 안에서는 불가능한데");
                 }
@@ -113,13 +119,13 @@ fn namumarker(
                         panic!()
                     }
                 }
-            } else if  *close == Expect::TripleWithNamuMark2
-                || *close == Expect::TripleWithNamuMark {
+            } else if *close == Expect::TripleWithNamuMark2 || *close == Expect::TripleWithNamuMark
+            {
                 if let RenderObject::NamuTriple(nt) = result {
                     nt.attr.as_mut().unwrap().push_str("}}}");
                 } else {
                     panic!();
-                }     
+                }
             } else if compiler.expected.contains(&Expect::JustTriple) {
                 *result = RenderObject::EarlyParse((Expect::JustTriple, namumarkresult.to_vec()));
                 compiler.index += 3;
@@ -209,7 +215,7 @@ fn namumarker(
                 compiler.expected.push(Expect::TripleWithNamuMark);
                 thisparsing = Some(parse_first(compiler, Expect::TripleWithNamuMark))
             } else if ch == '{' && compiler.peak("{{{") {
-                compiler.index += 5;
+                compiler.index += 3;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
                 thisparsing = Some(parse_first(compiler, Expect::JustTriple))
             } else {
