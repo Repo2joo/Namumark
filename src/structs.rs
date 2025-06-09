@@ -44,7 +44,7 @@ impl Compiler {
     pub fn parse(&mut self) {
         parse_first(self, Expect::None);
     }
-    fn get(&mut self, idx: usize) -> Option<&Objects> {
+    pub fn get(&mut self, idx: usize) -> Option<&Objects> {
         self.array.get(idx)
     }
     pub fn current(&mut self) -> Option<&Objects> {

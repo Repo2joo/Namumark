@@ -1,4 +1,5 @@
 use core::panic;
+use std::ops::Index;
 
 use crate::{
     renderobjs::{Languages, Link, LinkType, NamuTriple, RenderObject, Syntax},
@@ -90,8 +91,6 @@ fn namumarker(
             compiler.index += 2;
         } else if ch == '}' && compiler.peak("}}}") {
             if *close == Expect::JustTriple
-                || *close == Expect::TripleWithNamuMark2
-                || *close == Expect::TripleWithNamuMark
                 || *close == Expect::SyntaxTriple
                 || *close == Expect::TripleWithNamuMark3
             {
@@ -106,14 +105,21 @@ fn namumarker(
                         //첫줄 리터럴, 두번째줄 나무마크인 것들
                         namu_triple.content = Some(namumarkresult.to_vec());
                         return false;
-                    },
+                    }
                     RenderObject::Literal(_) => {
                         return false;
-                    },
+                    }
                     _ => {
                         panic!()
                     }
                 }
+            } else if  *close == Expect::TripleWithNamuMark2
+                || *close == Expect::TripleWithNamuMark {
+                if let RenderObject::NamuTriple(nt) = result {
+                    nt.attr.as_mut().unwrap().push_str("}}}");
+                } else {
+                    panic!();
+                }     
             } else if compiler.expected.contains(&Expect::JustTriple) {
                 *result = RenderObject::EarlyParse((Expect::JustTriple, namumarkresult.to_vec()));
                 compiler.index += 3;
@@ -126,7 +132,7 @@ fn namumarker(
                 compiler.index += 3;
                 return false;
             } else if compiler.expected.contains(&Expect::SyntaxTriple) {
-                //이 contains구문 너무 비효울적임. find로 잘 ㅎ래서 함수화 하셈 TODO 
+                //이 contains구문 너무 비효울적임. find로 잘 ㅎ래서 함수화 하셈 TODO
                 *result = RenderObject::EarlyParse((Expect::SyntaxTriple, namumarkresult.to_vec()));
                 compiler.index += 3;
                 return false;
@@ -230,11 +236,50 @@ fn namumarker(
                             //이런거 특징: 나중에 겁나 큰 예외 생겨서 갈아엎어야함
                             //오늘의 결론:주석화 잘하자 코드가 1000줄이 될 위기가 보이니 함수 분리 + 깃헙에 질문창을 열거나 해야겠음ㅇㅅㅇ;;;
                             } else if exp == Expect::TripleWithNamuMark {
-                                namumarkresult.push(Objects::Char('{'));
-                                namumarkresult.push(Objects::Char('{'));
-                                namumarkresult.push(Objects::Char('{'));
-                                namumarkresult.push(Objects::Char('#'));
-                                namumarkresult.push(Objects::Char('!')); //아니 이게 인정하긴 싫은데 작동은 해 진짜 전형적인. 그니까 분명 예외가 있을 것 같은데 예외가 없는 미친 캐이스. 그니까 earlyparse 단계에서는 a_whole_my_vec이 자동으로 처리해주다 보니까 예외를 생각하기가 쉽지가 않음
+                                let mut i: usize = 0;
+                                let mut fornowiki = String::new();
+                                loop {
+                                    if compiler.get(compiler.index + i)
+                                        == Some(&Objects::Char('\n'))
+                                        || compiler.get(compiler.index + i) == None
+                                    {
+                                        namumarkresult.push(Objects::Char('{'));
+                                        namumarkresult.push(Objects::Char('{'));
+                                        namumarkresult.push(Objects::Char('{'));
+                                        namumarkresult.push(Objects::Char('#'));
+                                        namumarkresult.push(Objects::Char('!'));
+                                        break;
+                                    }
+                                    if compiler.get(compiler.index + i) == Some(&Objects::Char('}'))
+                                        && compiler.get(compiler.index + i + 1)
+                                            == Some(&Objects::Char('}'))
+                                        && compiler.get(compiler.index + i + 2)
+                                            == Some(&Objects::Char('}'))
+                                    {
+                                        compiler.index += i + 3;
+                                        namumarkresult.push(Objects::RenderObject(
+                                            RenderObject::Literal(String::from("#!")),
+                                        ));
+                                        if let Objects::RenderObject(RenderObject::Literal(st)) =
+                                            namumarkresult.last_mut().unwrap()
+                                        {
+                                            st.push_str(&fornowiki);
+                                        } else {
+                                            panic!("이런걸 예외처리해야하는 언어라니......");
+                                        }
+                                        break;
+                                    }
+                                    if let Objects::Char(ch) =
+                                        compiler.get(compiler.index + i).unwrap()
+                                    {
+                                        fornowiki.push(*ch);
+                                    } else {
+                                        panic!()
+                                    }
+
+                                    i += 1;
+                                }
+                                //아니 이게 인정하긴 싫은데 작동은 해 진짜 전형적인. 그니까 분명 예외가 있을 것 같은데 예외가 없는 미친 캐이스. 그니까 earlyparse 단계에서는 a_whole_my_vec이 자동으로 처리해주다 보니까 예외를 생각하기가 쉽지가 않음
                                 //이런거 특징: 나중에 겁나 큰 예외 생겨서 갈아엎어야함
                                 //오늘의 결론:주석화 잘하자 코드가 1000줄이 될 위기가 보이니 함수 분리 + 깃헙에 질문창을 열거나 해야겠음ㅇㅅㅇ;;;
                             }
@@ -308,7 +353,7 @@ fn namumarker(
                 }
             } else {
                 true
-            }
+            };
         }
     } else {
         if *close == Expect::None {
@@ -425,7 +470,8 @@ fn a_whole_my_vec(
                 panic!();
             };
             return resultt;
-        }Expect::None => {
+        }
+        Expect::None => {
             return namumarkresult.to_vec();
         }
         _ => {
