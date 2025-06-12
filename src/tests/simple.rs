@@ -11,40 +11,35 @@ use crate::{
 fn 링크() {
     let mut compiler = Compiler::from(String::from("[[테스트케이스]]"));
     compiler.parse();
-    assert_eq!(
-        compiler.array,
-        vec![Objects::RenderObject(RenderObject::Link(Link {
+    assert_eq!(compiler.array, vec![Objects::RenderObject(
+        RenderObject::Link(Link {
             to: String::from("테스트케이스"),
             show: Vec::new(),
             link_type: LinkType::Hyper
-        }))]
-    )
+        })
+    )])
 }
 #[test]
 fn 링크_안닫힘() {
     let mut compiler = Compiler::from(String::from("[[테스트케이스"));
     compiler.parse();
-    assert_eq!(
-        compiler.array,
-        vec![
-            Objects::Char('['),
-            Objects::Char('['),
-            Objects::Char('테'),
-            Objects::Char('스'),
-            Objects::Char('트'),
-            Objects::Char('케'),
-            Objects::Char('이'),
-            Objects::Char('스')
-        ]
-    )
+    assert_eq!(compiler.array, vec![
+        Objects::Char('['),
+        Objects::Char('['),
+        Objects::Char('테'),
+        Objects::Char('스'),
+        Objects::Char('트'),
+        Objects::Char('케'),
+        Objects::Char('이'),
+        Objects::Char('스')
+    ])
 }
 #[test]
 fn 표시링크() {
     let mut compiler = Compiler::from(String::from("[[테스트케이스|스이케트스테]]"));
     compiler.parse();
-    assert_eq!(
-        compiler.array,
-        vec![Objects::RenderObject(RenderObject::Link(Link {
+    assert_eq!(compiler.array, vec![Objects::RenderObject(
+        RenderObject::Link(Link {
             to: String::from("테스트케이스"),
             show: vec![
                 Objects::Char('스'),
@@ -55,28 +50,25 @@ fn 표시링크() {
                 Objects::Char('테')
             ],
             link_type: LinkType::Hyper
-        }))]
-    )
+        })
+    )])
 }
 #[test]
 fn 표시링크_안닫힘() {
     let mut compiler = Compiler::from(String::from("[[테스트케이스|뀨"));
     compiler.parse();
-    assert_eq!(
-        compiler.array,
-        vec![
-            Objects::Char('['),
-            Objects::Char('['),
-            Objects::Char('테'),
-            Objects::Char('스'),
-            Objects::Char('트'),
-            Objects::Char('케'),
-            Objects::Char('이'),
-            Objects::Char('스'),
-            Objects::Char('|'),
-            Objects::Char('뀨')
-        ]
-    )
+    assert_eq!(compiler.array, vec![
+        Objects::Char('['),
+        Objects::Char('['),
+        Objects::Char('테'),
+        Objects::Char('스'),
+        Objects::Char('트'),
+        Objects::Char('케'),
+        Objects::Char('이'),
+        Objects::Char('스'),
+        Objects::Char('|'),
+        Objects::Char('뀨')
+    ])
 }
 #[test]
 fn 트리플위키() {
@@ -85,24 +77,21 @@ fn 트리플위키() {
 content}}}",
     ));
     compiler.parse();
-    assert_eq!(
-        compiler.array,
-        vec![Objects::RenderObject(RenderObject::NamuTriple(
-            NamuTriple {
-                triplename: "WiKi".to_string(),
-                attr: Some("attribute".to_string()),
-                content: Some(vec![
-                    Objects::Char('c'),
-                    Objects::Char('o'),
-                    Objects::Char('n'),
-                    Objects::Char('t'),
-                    Objects::Char('e'),
-                    Objects::Char('n'),
-                    Objects::Char('t'),
-                ])
-            }
-        ))]
-    )
+    assert_eq!(compiler.array, vec![Objects::RenderObject(
+        RenderObject::NamuTriple(NamuTriple {
+            triplename: "WiKi".to_string(),
+            attr: Some("attribute".to_string()),
+            content: Some(vec![
+                Objects::Char('c'),
+                Objects::Char('o'),
+                Objects::Char('n'),
+                Objects::Char('t'),
+                Objects::Char('e'),
+                Objects::Char('n'),
+                Objects::Char('t'),
+            ])
+        })
+    )])
 }
 #[test]
 fn 트리플위키_안닫힘() {
@@ -124,16 +113,13 @@ fn 트리플위키_속성에_삼중괄있음() {
 content}}}",
     ));
     compiler.parse();
-    assert_eq!(
-        compiler.array,
-        vec![Objects::RenderObject(RenderObject::NamuTriple(
-            NamuTriple {
-                attr: Some(String::from("attribute}}}")),
-                content: Some(slices(String::from("content"))),
-                triplename: String::from("WiKi")
-            }
-        ))]
-    )
+    assert_eq!(compiler.array, vec![Objects::RenderObject(
+        RenderObject::NamuTriple(NamuTriple {
+            attr: Some(String::from("attribute}}}")),
+            content: Some(slices(String::from("content"))),
+            triplename: String::from("WiKi")
+        })
+    )])
 }
 #[test]
 fn 트리플위키_속성에_삼중괄있음2() {
@@ -143,16 +129,13 @@ fn 트리플위키_속성에_삼중괄있음2() {
 content}}}",
     ));
     compiler.parse();
-    assert_eq!(
-        compiler.array,
-        vec![Objects::RenderObject(RenderObject::NamuTriple(
-            NamuTriple {
-                attr: Some(String::from("attribute{{{}}}")),
-                content: Some(slices(String::from("content"))),
-                triplename: String::from("WiKi")
-            }
-        ))]
-    )
+    assert_eq!(compiler.array, vec![Objects::RenderObject(
+        RenderObject::NamuTriple(NamuTriple {
+            attr: Some(String::from("attribute{{{}}}")),
+            content: Some(slices(String::from("content"))),
+            triplename: String::from("WiKi")
+        })
+    )])
 }
 #[test]
 fn 트리플위키_속성에_삼중괄있음_미완성() {
@@ -163,11 +146,11 @@ content",
     ));
     compiler.parse();
     let mut vect = slices("{{{#!WiKi attribute".to_owned());
-    vect.push(Objects::RenderObject(RenderObject::Literal(String::from(""))));
+    vect.push(Objects::RenderObject(RenderObject::Literal(String::from(
+        "",
+    ))));
     vect.extend_from_slice(&slices("\ncontent".to_owned()));
-    assert_eq!(
-        compiler.array, vect
-    )
+    assert_eq!(compiler.array, vect)
 }
 #[test]
 fn 파싱_우선순위() {
@@ -177,9 +160,13 @@ fn 파싱_우선순위() {
 content[[link|here}}}]]",
     ));
     compiler.parse();
-    let mut vect = vec![Objects::RenderObject(RenderObject::NamuTriple(NamuTriple { attr: Some(String::from("attr")), content: Some(slices("content[[link|here".to_string())), triplename: String::from("wiki") }))];
+    let mut vect = vec![Objects::RenderObject(RenderObject::NamuTriple(
+        NamuTriple {
+            attr: Some(String::from("attr")),
+            content: Some(slices("content[[link|here".to_string())),
+            triplename: String::from("wiki"),
+        },
+    ))];
     vect.extend_from_slice(&slices("]]".to_string()));
-    assert_eq!(
-        compiler.array, vect
-    )
+    assert_eq!(compiler.array, vect)
 }

@@ -30,10 +30,7 @@ pub struct Syntax {
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum Languages {
-    Namumark,   //음 이건 쉽게 만들 수 있는게 ast를 뽑아내서 색칠하면 되니까.
-    Corriander, //크레이트 나눠서 개발하니까 저쪽은... 그 크레만 뽑아오면 될듯? (아직 파서 개발을 안했데~ 그래서 내가 신통나게 까는중)
-    Dolce,      //이건 그냥 플젝 전채를 가져오면 될듯
-    NotSupported,
+    NotSupported, //지원하는 언어: 현제 없음
     //UmLang,
 }
 

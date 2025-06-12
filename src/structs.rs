@@ -1,8 +1,6 @@
-use std::clone;
-
 use crate::{
     parser::parse_first,
-    renderobjs::{Link, RenderObject, Syntax},
+    renderobjs::{RenderObject},
 };
 
 #[derive(Debug)]
