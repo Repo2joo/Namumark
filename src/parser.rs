@@ -16,7 +16,7 @@ pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
     while namumarker(compiler, &mut close, &mut namumarkresult, &mut result) {
         if compiler.lastrollbackindex.len() == 61 {
             panic!(
-                "미완성인 리터럴을 이따구로 도베하는 것은 허용되지 않는답니다. 리터럴 처리를 꼭 해주세요"
+                "문법 깊이 제한에 도달했습니다."
             )
         }
     }
@@ -490,3 +490,5 @@ fn parsing_close(
     }
     return None;
 }
+//todo 최적화.
+//컴퓨터는 이런걸로 0.3초나 걸리지 않음
