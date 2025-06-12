@@ -151,9 +151,7 @@ fn namumarker(
                 compiler.index += 3;
                 return false;
             } else {
-                namumarkresult.push(Objects::Char('}'));
-                namumarkresult.push(Objects::Char('}'));
-                namumarkresult.push(Objects::Char('}'));
+                namumarkresult.extend(slices("}}}"));
             }
             compiler.index += 3;
         } else if matches!(close, Expect::Link) {
@@ -237,10 +235,7 @@ fn namumarker(
                         if compiler.lastrollbackindex.len() == 1 {
                             compiler.index = *compiler.lastrollbackindex.last().unwrap();
                             if exp == Expect::Link {
-                                namumarkresult.push(Objects::Char('['));
-                                namumarkresult.push(Objects::Char('[')); //아니 이게 인정하긴 싫은데 작동은 해 진짜 전형적인. 그니까 분명 예외가 있을 것 같은데 예외가 없는 미친 캐이스. 그니까 earlyparse 단계에서는 a_whole_my_vec이 자동으로 처리해주다 보니까 예외를 생각하기가 쉽지가 않음
-                            //이런거 특징: 나중에 겁나 큰 예외 생겨서 갈아엎어야함
-                            //오늘의 결론:주석화 잘하자 코드가 1000줄이 될 위기가 보이니 함수 분리 + 깃헙에 질문창을 열거나 해야겠음ㅇㅅㅇ;;;
+                                namumarkresult.extend(slices("[["));
                             } else if exp == Expect::TripleWithNamuMark {
                                 let mut i: usize = 0;
                                 let mut fornowiki = String::new();
@@ -249,11 +244,7 @@ fn namumarker(
                                         == Some(&Objects::Char('\n'))
                                         || compiler.get(compiler.index + i) == None
                                     {
-                                        namumarkresult.push(Objects::Char('{'));
-                                        namumarkresult.push(Objects::Char('{'));
-                                        namumarkresult.push(Objects::Char('{'));
-                                        namumarkresult.push(Objects::Char('#'));
-                                        namumarkresult.push(Objects::Char('!'));
+                                        namumarkresult.extend(slices("{{{#!"));
                                         break;
                                     }
                                     if compiler.get(compiler.index + i) == Some(&Objects::Char('}'))
