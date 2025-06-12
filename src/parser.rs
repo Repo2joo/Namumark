@@ -62,99 +62,11 @@ fn namumarker(
 ) -> bool {
     if let Some(Objects::Char(ch)) = compiler.current() {
         let ch = ch.to_owned();
-        if ch == ']' && compiler.peak("]]") {
-            //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
-            if *close == Expect::Link2 || *close == Expect::Link {
-                compiler.index += 2;
-                compiler.lastrollbackindex.pop();
-                compiler.expected.pop();
-                if let RenderObject::Link(link) = result {
-                    link.show = namumarkresult.to_vec();
-                    if link.to.starts_with("파일:") {
-                        link.link_type = LinkType::File
-                    }
-                    if link.to.starts_with("분류:") {
-                        link.link_type = LinkType::Cat
-                    }
-                } else {
-                    panic!("내 생각 안에서는 불가능한데");
-                }
-                return false;
-            } else if compiler.expected.contains(&Expect::Link)
-                || compiler.expected.contains(&Expect::Link2)
-            {
-                *result = RenderObject::EarlyParse((
-                    Expect::Link,
-                    a_whole_my_vec(result, namumarkresult, &Expect::Link),
-                ));
-                compiler.index += 2;
-                return false;
-            } else {
-                compiler.index += 2;
-                namumarkresult.push(Objects::Char(']'));
-                namumarkresult.push(Objects::Char(']'));
-            }
-            compiler.index += 2;
-        } else if ch == '}' && compiler.peak("}}}") {
-            if *close == Expect::JustTriple
-                || *close == Expect::SyntaxTriple
-                || *close == Expect::TripleWithNamuMark3
-            {
-                compiler.index += 3;
-                compiler.lastrollbackindex.pop();
-                compiler.expected.pop();
-                match result {
-                    RenderObject::Syntax(_) => {
-                        return false; //이건 근데 ㄹㅇ 할깨 없음 신텍스는 문자열만 처리하는거라서
-                    }
-                    RenderObject::NamuTriple(namu_triple) => {
-                        //첫줄 리터럴, 두번째줄 나무마크인 것들
-                        namu_triple.content = Some(namumarkresult.to_vec());
-                        return false;
-                    }
-                    RenderObject::Literal(_) => {
-                        return false;
-                    }
-                    _ => {
-                        panic!()
-                    }
-                }
-            } else if *close == Expect::TripleWithNamuMark2 || *close == Expect::TripleWithNamuMark
-            {
-                if let RenderObject::NamuTriple(nt) = result {
-                    nt.attr.as_mut().unwrap().push_str("}}}");
-                } else {
-                    panic!();
-                }
-            } else if compiler.expected.contains(&Expect::JustTriple) {
-                *result = RenderObject::EarlyParse((Expect::JustTriple, namumarkresult.to_vec()));
-                compiler.index += 3;
-                return false;
-            } else if compiler.expected.contains(&Expect::TripleWithNamuMark) {
-                *result = RenderObject::EarlyParse((
-                    Expect::TripleWithNamuMark3,
-                    a_whole_my_vec(result, namumarkresult, close),
-                ));
-                compiler.index += 3;
-                return false;
-            } else if compiler.expected.contains(&Expect::SyntaxTriple) {
-                //이 contains구문 너무 비효울적임. find로 잘 ㅎ래서 함수화 하셈 TODO
-                *result = RenderObject::EarlyParse((Expect::SyntaxTriple, namumarkresult.to_vec()));
-                compiler.index += 3;
-                return false;
-            } else if compiler.expected.contains(&Expect::TripleWithNamuMark)
-                || compiler.expected.contains(&Expect::TripleWithNamuMark)
-            {
-                //리터럴 처리용
-                *result =
-                    RenderObject::EarlyParse((Expect::TripleWithNamuMark, namumarkresult.to_vec()));
-                compiler.index += 3;
-                return false;
-            } else {
-                namumarkresult.extend(slices("}}}"));
-            }
-            compiler.index += 3;
-        } else if matches!(close, Expect::Link) {
+        let whattodo = parsing_close(compiler, close, result, namumarkresult);
+        if let Some(bool) = whattodo {
+            return bool;
+        }
+        if matches!(close, Expect::Link) {
             if let RenderObject::Link(link) = result {
                 if ch == '|' {
                     *close = Expect::Link2;
@@ -163,7 +75,6 @@ fn namumarker(
                     link.to.push(ch);
                     compiler.index += 1;
                 }
-                // println!("{}", ch); 이럼 왜 소유권 안넘어감??? A:Copy trait을 만족시켜서
             } else {
                 panic!()
             }
@@ -187,34 +98,34 @@ fn namumarker(
                 }
                 compiler.index += 1;
             }
-        } else if matches!(close, Expect::JustTriple) {
+        } else if matches!(close, Expect::JustTriple) && !compiler.peak("{{{") {
             if let RenderObject::Literal(s) = result {
                 s.push(ch);
                 compiler.index += 1;
             }
         } else {
             let mut thisparsing: Option<RenderObject> = None;
-            if ch == '[' && compiler.peak("[[") {
+            if compiler.peak("[[") {
                 compiler.index += 2;
                 compiler.lastrollbackindex.push(compiler.index);
                 compiler.expected.push(Expect::Link);
                 thisparsing = Some(parse_first(compiler, Expect::Link));
-            } else if ch == '{' && compiler.peak("{{{#!syntax ") {
+            } else if compiler.peak("{{{#!syntax ") {
                 compiler.index += 5;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
                 thisparsing = Some(parse_first(compiler, Expect::SyntaxTriple))
-            } else if ch == '{'
-                && (compiler.peak("{{{#!wiki ")
+            } else if compiler.peak("{{{#!wiki ")
                     || compiler.peak("{{{#!if ")
-                    || compiler.peak("{{{#!folding "))
+                    || compiler.peak("{{{#!folding ")
             {
                 compiler.index += 5;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
                 compiler.expected.push(Expect::TripleWithNamuMark);
                 thisparsing = Some(parse_first(compiler, Expect::TripleWithNamuMark))
-            } else if ch == '{' && compiler.peak("{{{") {
+            } else if compiler.peak("{{{") {
                 compiler.index += 3;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
+                compiler.expected.push(Expect::JustTriple);
                 thisparsing = Some(parse_first(compiler, Expect::JustTriple))
             } else {
                 namumarkresult.push(Objects::Char(ch));
@@ -233,52 +144,18 @@ fn namumarker(
                     RenderObject::NopString(exp) => {
                         compiler.expected.pop();
                         if compiler.lastrollbackindex.len() == 1 {
-                            compiler.index = *compiler.lastrollbackindex.last().unwrap();
+                            if exp == Expect::TripleWithNamuMark {
+                                *result = RenderObject::Literal(String::new());
+                                *close = Expect::JustTriple;
+                                compiler.index = *compiler.lastrollbackindex.last().unwrap() - 2;
+                            }
                             if exp == Expect::Link {
-                                namumarkresult.extend(slices("[["));
-                            } else if exp == Expect::TripleWithNamuMark {
-                                let mut i: usize = 0;
-                                let mut fornowiki = String::new();
-                                loop {
-                                    if compiler.get(compiler.index + i)
-                                        == Some(&Objects::Char('\n'))
-                                        || compiler.get(compiler.index + i) == None
-                                    {
-                                        namumarkresult.extend(slices("{{{#!"));
-                                        break;
-                                    }
-                                    if compiler.get(compiler.index + i) == Some(&Objects::Char('}'))
-                                        && compiler.get(compiler.index + i + 1)
-                                            == Some(&Objects::Char('}'))
-                                        && compiler.get(compiler.index + i + 2)
-                                            == Some(&Objects::Char('}'))
-                                    {
-                                        compiler.index += i + 3;
-                                        namumarkresult.push(Objects::RenderObject(
-                                            RenderObject::Literal(String::from("#!")),
-                                        ));
-                                        if let Objects::RenderObject(RenderObject::Literal(st)) =
-                                            namumarkresult.last_mut().unwrap()
-                                        {
-                                            st.push_str(&fornowiki);
-                                        } else {
-                                            panic!("이런걸 예외처리해야하는 언어라니......");
-                                        }
-                                        break;
-                                    }
-                                    if let Objects::Char(ch) =
-                                        compiler.get(compiler.index + i).unwrap()
-                                    {
-                                        fornowiki.push(*ch);
-                                    } else {
-                                        panic!()
-                                    }
-
-                                    i += 1;
-                                }
-                                //아니 이게 인정하긴 싫은데 작동은 해 진짜 전형적인. 그니까 분명 예외가 있을 것 같은데 예외가 없는 미친 캐이스. 그니까 earlyparse 단계에서는 a_whole_my_vec이 자동으로 처리해주다 보니까 예외를 생각하기가 쉽지가 않음
-                                //이런거 특징: 나중에 겁나 큰 예외 생겨서 갈아엎어야함
-                                //오늘의 결론:주석화 잘하자 코드가 1000줄이 될 위기가 보이니 함수 분리 + 깃헙에 질문창을 열거나 해야겠음ㅇㅅㅇ;;;
+                                namumarkresult.extend(slices("[[".to_string()));
+                                compiler.index = *compiler.lastrollbackindex.last().unwrap();
+                            }
+                            if exp == Expect::JustTriple {
+                                namumarkresult.extend(slices("{{{".to_string()));
+                                compiler.index = *compiler.lastrollbackindex.last().unwrap();
                             }
                             compiler.lastrollbackindex.pop();
                             return true;
@@ -344,7 +221,15 @@ fn namumarker(
                     } //[[ {{{#!wiki 안녕]] }}} 대충 이런거 처리용
                     RenderObject::NopNopNop => panic!("이게 뭐하는 베리언트였더라"),
                     obj => {
-                        namumarkresult.push(Objects::RenderObject(obj));
+                        if close == &Expect::JustTriple {
+                            if let RenderObject::Literal(lt) = result {
+                                if let RenderObject::Literal(lt2) = obj {
+                                    lt.push_str(&format!("{{{{{{{}}}}}}}", lt2)); //wow it sucks
+                                } else {panic!()}
+                            } else {panic!()}
+                        } else {
+                            namumarkresult.push(Objects::RenderObject(obj));
+                        }
                         true
                     }
                 }
@@ -364,6 +249,7 @@ fn namumarker(
                     || ex == &&Expect::TripleWithNamuMark
                     || ex == &&Expect::TripleWithNamuMark2
                     || ex == &&Expect::TripleWithNamuMark3
+                    || ex == &&Expect::JustTriple
             });
             if (*close == Expect::Link2 || *close == Expect::Link)
                 && compiler.lastrollbackindex.len() != 1
@@ -374,15 +260,31 @@ fn namumarker(
                 *result = RenderObject::NopString(Expect::Link);
                 return false;
             }
-            if (*close == Expect::TripleWithNamuMark
+            if *close == Expect::TripleWithNamuMark
                 || *close == Expect::TripleWithNamuMark2
-                || *close == Expect::TripleWithNamuMark3)
-                && compiler.lastrollbackindex.len() != 1
+                || *close == Expect::TripleWithNamuMark3
             {
-                compiler.lastrollbackindex.pop();
+                if compiler.lastrollbackindex.len() != 1 {
+                    compiler.lastrollbackindex.pop();
+                } else {
+                    *result = RenderObject::Literal(String::new());
+                    *close = Expect::JustTriple;
+                    compiler.expected.pop();
+                    compiler.expected.push(Expect::JustTriple);
+                    let newidx = compiler.lastrollbackindex.last().unwrap()-2;
+                    compiler.lastrollbackindex.pop();
+                    compiler.lastrollbackindex.push(newidx);
+                    compiler.index = newidx;
+                    return true;
+                }
             }
-            if find == Some(&Expect::TripleWithNamuMark) {
+            if find == Some(&Expect::TripleWithNamuMark) || find == Some(&Expect::TripleWithNamuMark2) || find == Some(&Expect::TripleWithNamuMark3) {
                 *result = RenderObject::NopString(Expect::TripleWithNamuMark);
+                return false;
+            }
+            if *close == Expect::JustTriple && compiler.lastrollbackindex.len() != 1{compiler.lastrollbackindex.pop();}
+            if find == Some(&Expect::JustTriple) {
+                *result = RenderObject::NopString(Expect::JustTriple);
                 return false;
             }
             *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
@@ -418,13 +320,7 @@ fn a_whole_my_vec(
             return resultt;
         }
         Expect::TripleWithNamuMark => {
-            let mut resultt = vec![
-                Objects::Char('{'),
-                Objects::Char('{'),
-                Objects::Char('{'),
-                Objects::Char('#'),
-                Objects::Char('!'),
-            ];
+            let mut resultt = slices("{{{#!".to_owned());
             if let RenderObject::NamuTriple(nt) = result {
                 resultt.extend_from_slice(&slices(nt.triplename.clone()));
             } else {
@@ -433,13 +329,7 @@ fn a_whole_my_vec(
             return resultt;
         }
         Expect::TripleWithNamuMark2 => {
-            let mut resultt = vec![
-                Objects::Char('{'),
-                Objects::Char('{'),
-                Objects::Char('{'),
-                Objects::Char('#'),
-                Objects::Char('!'),
-            ];
+            let mut resultt = slices("{{{#!".to_owned());
             if let RenderObject::NamuTriple(nt) = result {
                 resultt.extend_from_slice(&slices(nt.triplename.clone()));
                 resultt.push(Objects::Char(' '));
@@ -450,19 +340,22 @@ fn a_whole_my_vec(
             return resultt;
         }
         Expect::TripleWithNamuMark3 => {
-            let mut resultt = vec![
-                Objects::Char('{'),
-                Objects::Char('{'),
-                Objects::Char('{'),
-                Objects::Char('#'),
-                Objects::Char('!'),
-            ];
+            let mut resultt = slices("{{{#!".to_owned());
             if let RenderObject::NamuTriple(nt) = result {
                 resultt.extend_from_slice(&slices(nt.triplename.clone()));
                 resultt.push(Objects::Char(' '));
                 resultt.extend_from_slice(&slices(nt.attr.clone().unwrap()));
                 resultt.push(Objects::Char('\n'));
                 resultt.extend_from_slice(&slices(nt.attr.clone().unwrap()));
+            } else {
+                panic!();
+            };
+            return resultt;
+        },
+        Expect::JustTriple => {
+            let mut resultt = slices("{{{".to_owned());
+            if let RenderObject::Literal(string) = result {
+                resultt.extend_from_slice(&slices(string.to_string()));
             } else {
                 panic!();
             };
@@ -482,4 +375,109 @@ pub fn slices(s: String) -> Vec<Objects> {
         result.push(Objects::Char(i));
     }
     result
+}
+// 닫히는 구문 처리.
+//예를들자면 ]]라던가 }}}라던가 )]라던가.....
+//가독성을 위해 함수화를 함
+//한 번만 호출되니까 컴파일 시간에 llvm에 의해서 삽입이 이뤄짐으로 어셈블리 상으로 call을 안할 것으로 예상
+//-> 리턴 스텍을 설정하는 오버해드 걸리지 않음
+//여러번 쓰이는 것을 함수화 하라고 하긴 하지만 이거는 함수화를 안하면 못읽어...
+fn parsing_close(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject, namumarkresult: &mut Vec<Objects>) -> Option<bool> {
+    if compiler.peak("]]") {
+            //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
+            if *close == Expect::Link2 || *close == Expect::Link {
+                compiler.index += 2;
+                compiler.lastrollbackindex.pop();
+                compiler.expected.pop();
+                if let RenderObject::Link(link) = result {
+                    link.show = namumarkresult.to_vec();
+                    if link.to.starts_with("파일:") {
+                        link.link_type = LinkType::File
+                    }
+                    if link.to.starts_with("분류:") {
+                        link.link_type = LinkType::Cat
+                    }
+                } else {
+                    panic!("내 생각 안에서는 불가능한데");
+                }
+                return Some(false);
+            } else if compiler.expected.contains(&Expect::Link)
+                || compiler.expected.contains(&Expect::Link2)
+            {
+                *result = RenderObject::EarlyParse((
+                    Expect::Link,
+                    a_whole_my_vec(result, namumarkresult, &Expect::Link),
+                ));
+                compiler.index += 2;
+                return Some(false);
+            } else {
+                namumarkresult.push(Objects::Char(']'));
+                namumarkresult.push(Objects::Char(']'));
+                compiler.index += 2;
+                return Some(true);
+            }
+        } else if compiler.peak("}}}") {
+            if *close == Expect::JustTriple
+                || *close == Expect::SyntaxTriple
+                || *close == Expect::TripleWithNamuMark3
+            {
+                compiler.index += 3;
+                compiler.lastrollbackindex.pop();
+                compiler.expected.pop();
+                match result {
+                    RenderObject::Syntax(_) => {
+                        return Some(false); //이건 근데 ㄹㅇ 할깨 없음 신텍스는 문자열만 처리하는거라서
+                    }
+                    RenderObject::NamuTriple(namu_triple) => {
+                        //첫줄 리터럴, 두번째줄 나무마크인 것들
+                        namu_triple.content = Some(namumarkresult.to_vec());
+                        return Some(false);
+                    }
+                    RenderObject::Literal(test) => {
+                        return Some(false);
+                    }
+                    _ => {
+                        panic!()
+                    }
+                }
+            } else if *close == Expect::TripleWithNamuMark2 || *close == Expect::TripleWithNamuMark
+            {
+                if let RenderObject::NamuTriple(nt) = result {
+                    nt.attr.as_mut().unwrap().push_str("}}}");
+                    compiler.index += 3;
+                    return Some(true)
+                } else {
+                    panic!();
+                }
+            } else if compiler.expected.contains(&Expect::JustTriple) {
+                *result = RenderObject::EarlyParse((Expect::JustTriple, namumarkresult.to_vec()));
+                compiler.index += 3;
+                return Some(false);
+            } else if compiler.expected.contains(&Expect::TripleWithNamuMark) {
+                *result = RenderObject::EarlyParse((
+                    Expect::TripleWithNamuMark3,
+
+                    a_whole_my_vec(result, namumarkresult, close),
+                ));
+                compiler.index += 3;
+                return Some(false);
+            } else if compiler.expected.contains(&Expect::SyntaxTriple) {
+                //이 contains구문 너무 비효울적임. find로 잘 ㅎ래서 함수화 하셈 TODO
+                *result = RenderObject::EarlyParse((Expect::SyntaxTriple, namumarkresult.to_vec()));
+                compiler.index += 3;
+                return Some(false);
+            } else if compiler.expected.contains(&Expect::TripleWithNamuMark)
+                || compiler.expected.contains(&Expect::TripleWithNamuMark)
+            {
+                //리터럴 처리용
+                *result =
+                    RenderObject::EarlyParse((Expect::TripleWithNamuMark, namumarkresult.to_vec()));
+                compiler.index += 3;
+                return Some(false);
+            } else {
+                namumarkresult.extend(slices("}}}".to_string()));
+            }
+            compiler.index += 3;
+        }
+        return None;
 }

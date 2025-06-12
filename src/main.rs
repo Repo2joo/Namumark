@@ -5,11 +5,11 @@ mod renderobjs;
 mod structs;
 #[cfg(test)]
 mod tests;
-mod traitt;
 
 mod parser; //아 이거 복잡하다
 fn main() {
-    let teststr = "{{{안녕하세요}}}";
+    let teststr = "{{{#!wiki }}}
+안녕";
 
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();

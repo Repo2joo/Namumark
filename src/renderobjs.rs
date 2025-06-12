@@ -10,7 +10,6 @@ pub enum RenderObject {
     NamuTriple(NamuTriple),
     Literal(String),
 }
-
 #[derive(Debug, PartialEq, Clone)]
 pub enum LinkType {
     File,
