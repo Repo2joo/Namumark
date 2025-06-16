@@ -8,27 +8,7 @@ mod tests;
 
 mod parser; //아 이거 복잡하다
 fn main() {
-    let teststr = "{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}
-{{{#!wiki }}}";
+    let teststr = "[[asdf|[[ccas|asfd]]";
 
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();

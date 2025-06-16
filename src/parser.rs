@@ -250,11 +250,6 @@ fn namumarker(
                     || ex == &&Expect::TripleWithNamuMark3
                     || ex == &&Expect::JustTriple
             });
-            if (*close == Expect::Link2 || *close == Expect::Link)
-                && compiler.lastrollbackindex.len() != 1
-            {
-                compiler.lastrollbackindex.pop();
-            }
             if find == Some(&Expect::Link) || find == Some(&Expect::Link2) {
                 *result = RenderObject::NopString(Expect::Link);
                 return false;
