@@ -261,9 +261,6 @@ fn namumarker(
                 *result = RenderObject::NopString(Expect::TripleWithNamuMark);
                 return false;
             }
-            if *close == Expect::JustTriple && compiler.lastrollbackindex.len() != 1 {
-                compiler.lastrollbackindex.pop();
-            }
             if find == Some(&Expect::JustTriple) {
                 *result = RenderObject::NopString(Expect::JustTriple);
                 return false;
