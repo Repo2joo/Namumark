@@ -11,7 +11,6 @@ fn main() {
     let teststr = "{{{#!wiki }}}
 ";
 
-
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();
     compiler.parse();

@@ -1,7 +1,4 @@
-use crate::{
-    parser::parse_first,
-    renderobjs::{RenderObject},
-};
+use crate::{parser::parse_first, renderobjs::RenderObject};
 
 #[derive(Debug)]
 pub struct Compiler {

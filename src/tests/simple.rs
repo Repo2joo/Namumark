@@ -1,9 +1,6 @@
 //test 하는 이유
 //복잡한 파서 구조상 로직이 시도때도 없이 바뀌는데 그걸 하나하나 테스트 하기는 어렵기 때문.
 //테스트에서 오차가 일어나면 바로 바꾸기 위해서
-
-use std::vec;
-
 use crate::{
     parser::slices,
     renderobjs::{Link, LinkType, NamuTriple, RenderObject},
@@ -173,11 +170,11 @@ content[[link|here}}}]]",
 #[test]
 fn 트리플_미완성_개행없이() {
     //이게 놀랍게도 원작고증이라는...(씨ㅂ)
-    let mut compiler = Compiler::from(String::from(
-        "{{{#!wiki attr}}}",
-    ));
+    let mut compiler = Compiler::from(String::from("{{{#!wiki attr}}}"));
     compiler.parse();
-    let vect = vec![Objects::RenderObject(RenderObject::Literal(String::from("#!wiki attr")))];
+    let vect = vec![Objects::RenderObject(RenderObject::Literal(String::from(
+        "#!wiki attr",
+    )))];
     assert_eq!(compiler.array, vect)
 }
 #[test]

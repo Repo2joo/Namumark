@@ -2,7 +2,6 @@
 //대략적인 파서의 알고리즘을 이해하고 오쇼.
 //그리고 여려움이 있으면 연락하쇼
 use core::panic;
-use std::fmt::format;
 
 use crate::{
     renderobjs::{Languages, Link, LinkType, NamuTriple, RenderObject, Syntax},
@@ -16,9 +15,7 @@ pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
     parsing_listener(&close, &mut result);
     while namumarker(compiler, &mut close, &mut namumarkresult, &mut result) {
         if compiler.lastrollbackindex.len() == 61 {
-            panic!(
-                "문법 깊이 제한에 도달했습니다."
-            )
+            panic!("문법 깊이 제한에 도달했습니다.")
         }
     }
     result
@@ -286,7 +283,7 @@ fn namumarker(
                 *result = RenderObject::NopString(Expect::JustTriple);
                 return false;
             }
-            
+
             *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
             return false;
         }
@@ -458,22 +455,26 @@ fn parsing_close(
             };
             if a {
                 if let RenderObject::NamuTriple(nt) = result.clone() {
-                *result = RenderObject::Literal(String::from(format!("#!{} {}", nt.triplename, nt.attr.unwrap_or_default())));
-                compiler.index += 3;
-                compiler.expected.pop();
-                compiler.lastrollbackindex.pop();
-                return Some(false);
+                    *result = RenderObject::Literal(String::from(format!(
+                        "#!{} {}",
+                        nt.triplename,
+                        nt.attr.unwrap_or_default()
+                    )));
+                    compiler.index += 3;
+                    compiler.expected.pop();
+                    compiler.lastrollbackindex.pop();
+                    return Some(false);
                 } else {
                     panic!()
                 }
             } else {
                 if let RenderObject::NamuTriple(nt) = result {
-                nt.attr.as_mut().unwrap().push_str("}}}");
-                compiler.index += 3;
-                return Some(true);
-            } else {
-                panic!();
-            }
+                    nt.attr.as_mut().unwrap().push_str("}}}");
+                    compiler.index += 3;
+                    return Some(true);
+                } else {
+                    panic!();
+                }
             }
         } else if compiler.expected.contains(&Expect::JustTriple) {
             *result = RenderObject::EarlyParse((Expect::JustTriple, namumarkresult.to_vec()));

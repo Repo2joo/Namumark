@@ -31,7 +31,7 @@ pub struct Syntax {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Languages {
     NotSupported, //지원하는 언어: 현제 없음
-    //UmLang,
+                  //UmLang,
 }
 
 #[derive(Debug, PartialEq, Clone)]
