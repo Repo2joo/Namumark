@@ -241,7 +241,8 @@ fn namumarker(
             *result = RenderObject::NopNopNop;
             return false;
         } else {
-            let find = compiler.expected.iter().find(|ex| {
+            let a = compiler.expected.clone();
+            let find = a.iter().find(|ex| {
                 ex == &&Expect::Link
                     || ex == &&Expect::Link2
                     || ex == &&Expect::TripleWithNamuMark
@@ -257,17 +258,6 @@ fn namumarker(
             if find == Some(&Expect::Link) || find == Some(&Expect::Link2) {
                 *result = RenderObject::NopString(Expect::Link);
                 return false;
-            }
-            if *close == Expect::TripleWithNamuMark
-                || *close == Expect::TripleWithNamuMark2
-                || *close == Expect::TripleWithNamuMark3
-            {
-                if compiler.lastrollbackindex.len() != 1 {
-                    compiler.lastrollbackindex.pop();
-                } else {
-                    *result = RenderObject::NopString(Expect::TripleWithNamuMark);
-                    return false;
-                }
             }
             if find == Some(&Expect::TripleWithNamuMark)
                 || find == Some(&Expect::TripleWithNamuMark2)
