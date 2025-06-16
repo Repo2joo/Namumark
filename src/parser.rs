@@ -2,6 +2,7 @@
 //대략적인 파서의 알고리즘을 이해하고 오쇼.
 //그리고 여려움이 있으면 연락하쇼
 use core::panic;
+use std::fmt::format;
 
 use crate::{
     renderobjs::{Languages, Link, LinkType, NamuTriple, RenderObject, Syntax},
@@ -142,9 +143,8 @@ fn namumarker(
                         compiler.expected.pop();
                         if compiler.lastrollbackindex.len() == 1 {
                             if exp == Expect::TripleWithNamuMark {
-                                *result = RenderObject::Literal(String::new());
-                                *close = Expect::JustTriple;
-                                compiler.index = *compiler.lastrollbackindex.last().unwrap() - 2;
+                                namumarkresult.extend(slices("{{{#!".to_string()));
+                                compiler.index = *compiler.lastrollbackindex.last().unwrap();
                             }
                             if exp == Expect::Link {
                                 namumarkresult.extend(slices("[[".to_string()));
@@ -268,15 +268,8 @@ fn namumarker(
                 if compiler.lastrollbackindex.len() != 1 {
                     compiler.lastrollbackindex.pop();
                 } else {
-                    *result = RenderObject::Literal(String::new());
-                    *close = Expect::JustTriple;
-                    compiler.expected.pop();
-                    compiler.expected.push(Expect::JustTriple);
-                    let newidx = compiler.lastrollbackindex.last().unwrap() - 2;
-                    compiler.lastrollbackindex.pop();
-                    compiler.lastrollbackindex.push(newidx);
-                    compiler.index = newidx;
-                    return true;
+                    *result = RenderObject::NopString(Expect::TripleWithNamuMark);
+                    return false;
                 }
             }
             if find == Some(&Expect::TripleWithNamuMark)
@@ -293,6 +286,7 @@ fn namumarker(
                 *result = RenderObject::NopString(Expect::JustTriple);
                 return false;
             }
+            
             *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
             return false;
         }
@@ -452,12 +446,34 @@ fn parsing_close(
                 }
             }
         } else if *close == Expect::TripleWithNamuMark2 || *close == Expect::TripleWithNamuMark {
-            if let RenderObject::NamuTriple(nt) = result {
+            let mut i = compiler.index;
+            let a = loop {
+                if compiler.get(i) == Some(&Objects::Char('\n')) {
+                    break false;
+                } else if compiler.get(i) == None {
+                    break true;
+                } else {
+                    i += 1;
+                }
+            };
+            if a {
+                if let RenderObject::NamuTriple(nt) = result.clone() {
+                *result = RenderObject::Literal(String::from(format!("#!{} {}", nt.triplename, nt.attr.unwrap_or_default())));
+                compiler.index += 3;
+                compiler.expected.pop();
+                compiler.lastrollbackindex.pop();
+                return Some(false);
+                } else {
+                    panic!()
+                }
+            } else {
+                if let RenderObject::NamuTriple(nt) = result {
                 nt.attr.as_mut().unwrap().push_str("}}}");
                 compiler.index += 3;
                 return Some(true);
             } else {
                 panic!();
+            }
             }
         } else if compiler.expected.contains(&Expect::JustTriple) {
             *result = RenderObject::EarlyParse((Expect::JustTriple, namumarkresult.to_vec()));
@@ -485,8 +501,9 @@ fn parsing_close(
             return Some(false);
         } else {
             namumarkresult.extend(slices("}}}".to_string()));
+            compiler.index += 3;
+            return Some(true);
         }
-        compiler.index += 3;
     }
     return None;
 }

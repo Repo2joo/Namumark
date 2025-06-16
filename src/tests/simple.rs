@@ -2,6 +2,8 @@
 //복잡한 파서 구조상 로직이 시도때도 없이 바뀌는데 그걸 하나하나 테스트 하기는 어렵기 때문.
 //테스트에서 오차가 일어나면 바로 바꾸기 위해서
 
+use std::vec;
+
 use crate::{
     parser::slices,
     renderobjs::{Link, LinkType, NamuTriple, RenderObject},
@@ -146,10 +148,8 @@ content",
     ));
     compiler.parse();
     let mut vect = slices("{{{#!WiKi attribute".to_owned());
-    vect.push(Objects::RenderObject(RenderObject::Literal(String::from(
-        "",
-    ))));
-    vect.extend_from_slice(&slices("\ncontent".to_owned()));
+    vect.push(Objects::RenderObject(RenderObject::Literal(String::new())));
+    vect.extend(slices("\ncontent".to_owned()));
     assert_eq!(compiler.array, vect)
 }
 #[test]
@@ -168,5 +168,26 @@ content[[link|here}}}]]",
         },
     ))];
     vect.extend_from_slice(&slices("]]".to_string()));
+    assert_eq!(compiler.array, vect)
+}
+#[test]
+fn 트리플_미완성_개행없이() {
+    //이게 놀랍게도 원작고증이라는...(씨ㅂ)
+    let mut compiler = Compiler::from(String::from(
+        "{{{#!wiki attr}}}",
+    ));
+    compiler.parse();
+    let vect = vec![Objects::RenderObject(RenderObject::Literal(String::from("#!wiki attr")))];
+    assert_eq!(compiler.array, vect)
+}
+#[test]
+fn 트리플_미완성_개행있이() {
+    //이게 놀랍게도 원작고증이라는...(씨ㅂ)
+    let mut compiler = Compiler::from(String::from(
+        "{{{#!wiki attr}}}
+",
+    ));
+    compiler.parse();
+    let vect = slices("{{{#!wiki attr}}}\n".to_owned());
     assert_eq!(compiler.array, vect)
 }
