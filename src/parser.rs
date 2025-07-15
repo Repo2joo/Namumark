@@ -4,7 +4,7 @@
 use core::panic;
 
 use crate::{
-    renderobjs::{Languages, Link, LinkType, NamuTriple, RenderObject, Syntax},
+    renderobjs::{Languages, Link, LinkType, NamuTriple, NamumarkMacro, RenderObject, Syntax},
     structs::{Compiler, Expect, Objects},
 };
 
@@ -122,6 +122,139 @@ fn namumarker(
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
                 compiler.expected.push(Expect::JustTriple);
                 thisparsing = Some(parse_first(compiler, Expect::JustTriple))
+            } else if compiler.peak("[pagecount]") {
+                compiler.index += 11;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("pagecount"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[date]") {
+                compiler.index += 6;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("date"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[datetime]") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("date"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[목차]") {
+                compiler.index += 4;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("context"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[tableofcontents]") {
+                compiler.index += 17;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("context"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[각주]") {
+                compiler.index += 4;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("reference"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[footnote]") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("reference"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[br]") {
+                compiler.index += 4;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("br"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[clearfix]") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[youtube(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[kakaotv(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[nicovideo(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[vimeo(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[navertv(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[include(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[age(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[dday(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[pagecount(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
+            } else if compiler.peak("[ruby(") {
+                compiler.index += 10;
+                namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(NamumarkMacro {
+                    macroname:String::from("clearfix"),
+                    macroarg:None
+                })));
+                true;
             } else {
                 namumarkresult.push(Objects::Char(ch));
                 compiler.index += 1;

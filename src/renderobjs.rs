@@ -9,6 +9,7 @@ pub enum RenderObject {
     Syntax(Syntax),
     NamuTriple(NamuTriple),
     Literal(String),
+    NamumarkMacro(NamumarkMacro)
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum LinkType {
@@ -39,4 +40,9 @@ pub struct NamuTriple {
     pub attr: Option<String>,
     pub content: Option<Vec<Objects>>,
     pub triplename: String,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct NamumarkMacro { //웬지 예약어랑 곂칠듯
+    pub macroname:String,
+    pub macroarg:Option<String>
 }

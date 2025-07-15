@@ -1,5 +1,6 @@
-use crate::{parser::parse_first, renderobjs::RenderObject};
+use std::fmt;
 
+use crate::{parser::parse_first, renderobjs::RenderObject};
 #[derive(Debug)]
 pub struct Compiler {
     pub index: usize,
