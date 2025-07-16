@@ -209,51 +209,51 @@ fn namumarker(
                     },
                 )));
                 true;
-            } else if compiler.peak("[youtube(") {
+            } else if compiler.peak("[youtube(") { //TODO 이거메크로타잎 enmu 말고 String으로 저장하기
                 compiler.index += 9;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::YouTube));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::YouTube)));
             } else if compiler.peak("[nicovideo(") {
                 compiler.index += 11;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::NicoVideo));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::NicoVideo)));
             } else if compiler.peak("[vimeo(") {
                 compiler.index += 7;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::Vimeo));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::Vimeo)));
             } else if compiler.peak("[navertv(") {
                 compiler.index += 9;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::NaverTV));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::NaverTV)));
             } else if compiler.peak("[include(") {
                 compiler.index += 9;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::Include));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::Include)));
             } else if compiler.peak("[age(") {
                 compiler.index += 4;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::Age));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::Age)));
             } else if compiler.peak("[dday(") {
                 compiler.index += 6;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::DDay));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::DDay)));
             } else if compiler.peak("[pagecount(") {
                 compiler.index += 11;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::PageCount));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::PageCount)));
             } else if compiler.peak("[ruby(") {
                 compiler.index += 10;
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
-                compiler.expected.push(Expect::JustTriple);
-                thisparsing = Some(parse_first(compiler, Expect::JustTriple));
+                compiler.expected.push(Expect::NamuMacro(NamuMacroType::Ruby));
+                thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::Ruby)));
             } else {
                 namumarkresult.push(Objects::Char(ch));
                 compiler.index += 1;
@@ -420,11 +420,11 @@ fn a_whole_my_vec(
             return resultt;
         },
         Expect::NamuMacro(nm) => {
-            let mut resultt = vec![Objects::Char('['), Objects::Char('(')];
-            if let RenderObject::Link(link) = result {
-                resultt.extend_from_slice(&slices(link.to.clone()));
-                resultt.push(Objects::Char('|'));
-                resultt.extend_from_slice(&namumarkresult);
+            let mut resultt = vec![Objects::Char('[')];
+            if let RenderObject::NamumarkMacro(macroname) = result {
+                resultt.extend_from_slice(&slices(macroname.macroname.to_string()));
+                resultt.push(Objects::Char('('));
+                resultt.extend_from_slice(&slices(macroname.macroarg.clone().unwrap_or("".to_owned())));
             } else {
                 panic!();
             };
@@ -546,23 +546,20 @@ fn parsing_close(
         }
     } else if compiler.peak(")]") {
         //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
-        if !matches!(close, Expect::NamuMacro(_)) {
+        if matches!(close, Expect::NamuMacro(_)) {
             compiler.index += 2;
             compiler.lastrollbackindex.pop();
             compiler.expected.pop();
             return Some(false);
         } else if let Some(Expect::NamuMacro(nt)) = compiler.expected.iter().find(|x| matches!(x, Expect::NamuMacro(_))) {
-            let mut resultt = Vec::from([Objects::Char('[')]);
-            resultt.extend(slices(nt.to_string()));
-            resultt.push(Objects::Char('('));
             *result = RenderObject::EarlyParse((
                 Expect::NamuMacro(nt.clone()),
-                resultt
+                a_whole_my_vec(result, namumarkresult, close),
             ));
             compiler.index += 2;
             return Some(false);
         } else {
-            namumarkresult.push(Objects::Char(']'));
+            namumarkresult.push(Objects::Char(')'));
             namumarkresult.push(Objects::Char(']'));
             compiler.index += 2;
             return Some(true);
@@ -637,7 +634,6 @@ fn parsing_close(
             compiler.index += 3;
             return Some(false);
         } else if compiler.expected.contains(&Expect::SyntaxTriple) {
-            //이 contains구문 너무 비효울적임. find로 잘 ㅎ래서 함수화 하셈 TODO
             *result = RenderObject::EarlyParse((Expect::SyntaxTriple, namumarkresult.to_vec()));
             compiler.index += 3;
             return Some(false);
