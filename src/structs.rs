@@ -23,6 +23,36 @@ pub enum Expect {
     TripleWithNamuMark2,
     TripleWithNamuMark3,
     JustTriple,
+    NamuMacro(NamuMacroType)
+}
+#[derive(Debug, PartialEq, Clone)]
+pub enum NamuMacroType {
+    YouTube,
+    KakaoTV,
+    NicoVideo,
+    Vimeo,
+    NaverTV,
+    Include,
+    Age,
+    DDay,
+    PageCount,
+    Ruby
+}
+impl NamuMacroType {
+    pub fn to_string(&self) -> String {
+        match self {
+            NamuMacroType::YouTube => String::from("youtube"),
+            NamuMacroType::KakaoTV => String::from("kakaotv"),
+            NamuMacroType::NicoVideo => String::from("nicovideo"),
+            NamuMacroType::Vimeo => String::from("vimeo"),
+            NamuMacroType::NaverTV => String::from("navertv"),
+            NamuMacroType::Include => String::from("include"),
+            NamuMacroType::Age => String::from("age"),
+            NamuMacroType::DDay => String::from("dday"),
+            NamuMacroType::PageCount => String::from("pagecount"),
+            NamuMacroType::Ruby => String::from("ruby"),
+        }
+    }
 }
 impl Compiler {
     pub fn from(string: String) -> Compiler {
