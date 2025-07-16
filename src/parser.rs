@@ -72,6 +72,7 @@ fn namumarker(
             if let RenderObject::Link(link) = result {
                 if ch == '|' {
                     *close = Expect::Link2;
+                    *compiler.expected.last_mut().unwrap() = Expect::Link2;
                     compiler.index += 1;
                 } else {
                     link.to.push(ch);
@@ -296,7 +297,7 @@ fn namumarker(
                                 Expect::None => {
                                     panic!("아 그거 여기서 처리하는거 아닌데 ㅋㅋㄹㅃㅃㅃㅃ");
                                 }
-                                Expect::Link2 => {
+                                Expect::Link|Expect::Link2 => {
                                     //생각해보니까 link는 earlyparse될 일이 없잖아
                                     if let RenderObject::Link(link) = result {
                                         link.show.extend(tuple.1.to_vec());
@@ -475,12 +476,13 @@ fn a_whole_my_vec(
         }
         Expect::JustTriple => {
             let mut resultt = slices("{{{".to_owned());
-            if let RenderObject::Literal(string) = result {
-                resultt.extend_from_slice(&slices(string.to_string()));
+            if let RenderObject::Literal(lt) = result {
+                resultt.extend_from_slice(&slices(lt.clone()));
+                resultt.extend_from_slice(&namumarkresult);
             } else {
                 panic!();
             };
-            return resultt;
+            resultt
         }
         Expect::None => {
             return namumarkresult.to_vec();
@@ -527,12 +529,12 @@ fn parsing_close(
                 panic!("내 생각 안에서는 불가능한데");
             }
             return Some(false);
-        } else if compiler.expected.contains(&Expect::Link)
-            || compiler.expected.contains(&Expect::Link2)
+        } else if compiler.expected.get(0).unwrap() == &Expect::Link
+            || compiler.expected.get(0).unwrap() == &Expect::Link2
         {
             *result = RenderObject::EarlyParse((
-                Expect::Link,
-                a_whole_my_vec(result, namumarkresult, &Expect::Link),
+                compiler.expected.get(0).unwrap().clone(),
+                a_whole_my_vec(result, namumarkresult, close),
             ));
             compiler.index += 2;
             return Some(false);
@@ -553,7 +555,6 @@ fn parsing_close(
             let mut resultt = Vec::from([Objects::Char('[')]);
             resultt.extend(slices(nt.to_string()));
             resultt.push(Objects::Char('('));
-            resultt.push();
             *result = RenderObject::EarlyParse((
                 Expect::NamuMacro(nt.clone()),
                 resultt

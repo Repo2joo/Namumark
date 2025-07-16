@@ -13,7 +13,7 @@ mod tests;
 
 mod parser; //아 이거 복잡하다
 fn main() {
-    let teststr = "";
+    let teststr = "[[aaaaa|aa{{{aaw{{{owim]]";
 
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();
