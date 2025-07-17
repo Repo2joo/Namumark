@@ -254,6 +254,46 @@ fn namumarker(
                 compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
                 compiler.expected.push(Expect::NamuMacro(NamuMacroType::Ruby));
                 thisparsing = Some(parse_first(compiler, Expect::NamuMacro(NamuMacroType::Ruby)));
+            } else if compiler.peak_line("#redirect ") {
+                compiler.index += 10;
+                compiler.redirect = Some(String::new());
+                loop {
+                    if compiler.current() == Some(Objects::Char('\n')) || compiler.current() == None {
+                        break;
+                    } else {
+                        let current = compiler.current();
+                        if let Some(Objects::Char(ch)) = current {
+                            compiler.redirect.as_mut().unwrap().push(ch);
+                        } else {
+                            panic!()
+                        }
+                    }
+                    compiler.index +=1;
+                }
+                return false;
+            } else if compiler.peak_line("##") {
+                compiler.index +=2;
+                let mut fix = false;
+                if compiler.current() == Some(Objects::Char('@')) {
+                    fix = true;
+                }
+                loop {
+                    compiler.index +=1;
+                    if compiler.current() == Some(Objects::Char('\n')) || compiler.current() == None {
+                        if fix {compiler.fixed_comments.push("".to_string())}
+                        compiler.index+=1;
+                        break;
+                    }
+                    if fix {
+                        let current = compiler.current();
+                        if let Some(Objects::Char(ch)) = current {
+                            compiler.fixed_comments.last_mut().unwrap().push(ch);
+                        } else {
+                            panic!()
+                        }
+                    }
+                }
+                true;
             } else {
                 namumarkresult.push(Objects::Char(ch));
                 compiler.index += 1;
@@ -310,6 +350,7 @@ fn namumarker(
                                     if let RenderObject::NamuTriple(nt) = result {
                                         namumarkresult.extend(tuple.1);
                                         nt.content.as_mut().unwrap().extend(namumarkresult.clone());
+                                        //namumarkresult는 빌려준건데 (더이상 쓸 필요 없긴 한데)
                                     } else {
                                         panic!()
                                     }
@@ -424,7 +465,7 @@ fn a_whole_my_vec(
             if let RenderObject::NamumarkMacro(macroname) = result {
                 resultt.extend_from_slice(&slices(macroname.macroname.to_string()));
                 resultt.push(Objects::Char('('));
-                resultt.extend_from_slice(&slices(macroname.macroarg.clone().unwrap_or("".to_owned())));
+                resultt.extend_from_slice(&slices(macroname.macroarg.clone().unwrap_or("".to_string())));
             } else {
                 panic!();
             };
@@ -442,7 +483,7 @@ fn a_whole_my_vec(
             return resultt;
         }
         Expect::TripleWithNamuMark => {
-            let mut resultt = slices("{{{#!".to_owned());
+            let mut resultt = slices("{{{#!".to_string());
             if let RenderObject::NamuTriple(nt) = result {
                 resultt.extend_from_slice(&slices(nt.triplename.clone()));
             } else {
@@ -451,7 +492,7 @@ fn a_whole_my_vec(
             return resultt;
         }
         Expect::TripleWithNamuMark2 => {
-            let mut resultt = slices("{{{#!".to_owned());
+            let mut resultt = slices("{{{#!".to_string());
             if let RenderObject::NamuTriple(nt) = result {
                 resultt.extend_from_slice(&slices(nt.triplename.clone()));
                 resultt.push(Objects::Char(' '));
@@ -462,7 +503,7 @@ fn a_whole_my_vec(
             return resultt;
         }
         Expect::TripleWithNamuMark3 => {
-            let mut resultt = slices("{{{#!".to_owned());
+            let mut resultt = slices("{{{#!".to_string());
             if let RenderObject::NamuTriple(nt) = result {
                 resultt.extend_from_slice(&slices(nt.triplename.clone()));
                 resultt.push(Objects::Char(' '));
@@ -475,7 +516,7 @@ fn a_whole_my_vec(
             return resultt;
         }
         Expect::JustTriple => {
-            let mut resultt = slices("{{{".to_owned());
+            let mut resultt = slices("{{{".to_string());
             if let RenderObject::Literal(lt) = result {
                 resultt.extend_from_slice(&slices(lt.clone()));
                 resultt.extend_from_slice(&namumarkresult);

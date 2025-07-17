@@ -13,11 +13,11 @@ mod tests;
 
 mod parser; //아 이거 복잡하다
 fn main() {
-    let teststr = "[[a | [dday(1)]";
+    let teststr = "{{{
+# redirect asdf}}}";
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();
     compiler.parse();
     let es = start.elapsed();
-    println!("parsed: {:#?}\nIn {:?}", compiler.array, es);
+    println!("In {:?}\nfixed:{:?}\nredirect:{:?}\n parsed: {:#?}\n", es, compiler.fixed_comments, compiler.redirect, compiler.array);
 }
-static mut CUSTOM_MACROS_NO_ARG: Option<Arc<Mutex<Vec<Objects>>>> = None;
