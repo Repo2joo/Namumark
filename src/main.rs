@@ -17,6 +17,7 @@ fn main() {
 #redirect asdf}}}";
     let mut compiler = Compiler::from(teststr.to_owned());
     let start = Instant::now();
+    println!("a:");
     compiler.parse();
     let es = start.elapsed();
     println!(

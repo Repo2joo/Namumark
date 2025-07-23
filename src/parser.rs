@@ -6,7 +6,7 @@ use std::vec;
 
 use crate::{
     renderobjs::{Languages, Link, LinkType, NamuTriple, NamumarkMacro, RenderObject, Syntax},
-    structs::{Compiler, Expect, NamuMacroType, Objects},
+    structs::{Compiler, Expect, ListType, NamuMacroType, Objects},
 };
 
 pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
@@ -53,6 +53,9 @@ fn parsing_listener(close: &Expect, mut result: &mut RenderObject) {
                 macroname: namu_macro_type.to_string(),
                 macroarg: Some(String::new()),
             });
+        },
+        Expect::List(lt)=> {
+            
         }
     }
 }
@@ -342,6 +345,8 @@ fn namumarker(
                 }
                 true;
             } else if let (true, how) = compiler.peak_repeat_line(' ', Some("1.")) {
+                compiler.index += how+2;
+                thisparsing = Some(parse_first(compiler, Expect::List(ListType::Arabia)))
             } else if let (true, how) = compiler.peak_repeat_line(' ', Some("I.")) {
             } else if let (true, how) = compiler.peak_repeat_line(' ', Some("i.")) {
             } else if let (true, how) = compiler.peak_repeat_line(' ', Some("A.")) {
