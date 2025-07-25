@@ -9,15 +9,15 @@ mod tests;
 
 mod parser; //아 이거 복잡하다
 fn main() {
-    let teststr = "
+  let teststr = "
 #redirect asdf}}}";
-    let mut compiler = Compiler::from(teststr.to_owned());
-    let start = Instant::now();
-    println!("a:");
-    compiler.parse();
-    let es = start.elapsed();
-    println!(
-        "In {:?}\nfixed:{:?}\nredirect:{:?}\n parsed: {:#?}\n",
-        es, compiler.fixed_comments, compiler.redirect, compiler.array
-    );
+  let mut compiler = Compiler::from(teststr.to_owned());
+  let start = Instant::now();
+  println!("a:");
+  compiler.parse();
+  let es = start.elapsed();
+  println!(
+    "In {:?}\nfixed:{:?}\nredirect:{:?}\n parsed: {:#?}\n",
+    es, compiler.fixed_comments, compiler.redirect, compiler.array
+  );
 }

@@ -5,7 +5,9 @@ use core::panic;
 use std::vec;
 
 use crate::{
-  renderobjs::{Languages, Link, LinkType, List, ListLine, NamuTriple, NamumarkMacro, RenderObject, Syntax},
+  renderobjs::{
+    Languages, Link, LinkType, List, ListLine, NamuTriple, NamumarkMacro, RenderObject, Syntax,
+  },
   structs::{Compiler, Expect, ListType, NamuMacroType, Objects},
 };
 
@@ -53,11 +55,11 @@ fn prepare_result(close: &Expect, mut result: &mut RenderObject) {
         macroname: namu_macro_type.to_string(),
         macroarg: Some(String::new()),
       });
-    },
-    Expect::List(lvl)=> {
-      *result = RenderObject::ListLine(ListLine{
-        lvl:lvl.clone(),
-        content:Vec::new()
+    }
+    Expect::List(lvl) => {
+      *result = RenderObject::ListLine(ListLine {
+        lvl: lvl.clone(),
+        content: Vec::new(),
       })
     }
   }
@@ -307,8 +309,7 @@ fn namumarker(
         compiler.index += 10;
         compiler.redirect = Some(String::new());
         loop {
-          if compiler.current() == Some(Objects::Char('\n')) || compiler.current() == None
-          {
+          if compiler.current() == Some(Objects::Char('\n')) || compiler.current() == None {
             break;
           } else {
             let current = compiler.current();
@@ -329,8 +330,7 @@ fn namumarker(
         }
         loop {
           compiler.index += 1;
-          if compiler.current() == Some(Objects::Char('\n')) || compiler.current() == None
-          {
+          if compiler.current() == Some(Objects::Char('\n')) || compiler.current() == None {
             if fix {
               compiler.fixed_comments.push("".to_string())
             }
@@ -348,31 +348,31 @@ fn namumarker(
         }
         true;
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("1.")) {
-        compiler.index += how+2;
-        thisparsing = Some(parse_first(compiler, Expect::List(how))); 
+        compiler.index += how + 2;
+        thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("I.")) {
-        compiler.index += how+2;
+        compiler.index += how + 2;
         thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("i.")) {
-        compiler.index += how+2;
+        compiler.index += how + 2;
         thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("A.")) {
-        compiler.index += how+2;
+        compiler.index += how + 2;
         thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("a.")) {
-        compiler.index += how+2;
+        compiler.index += how + 2;
         thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("가.")) {
-        compiler.index += how+2;
+        compiler.index += how + 2;
         thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("*")) {
-        compiler.index += how+1;
+        compiler.index += how + 1;
         thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
       } else {
@@ -467,7 +467,15 @@ fn namumarker(
               return false;
             }
           } //[[ {{{#!wiki 안녕]] }}} 대충 이런거 처리용
-          RenderObject::NopNopNop => panic!("이게 뭐하는 베리언트였더라"),
+          RenderObject::NopNopNop => panic!("이게 뭐value하는 베리언트였더라"),
+          RenderObject::ListLine(ll) => {
+            if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last_mut() {
+              lt.content.push(ll);
+            } else {
+              panic!();
+            }
+            return true;
+          }
           obj => {
             if close == &Expect::JustTriple {
               if let RenderObject::Literal(lt) = result {
@@ -607,15 +615,18 @@ fn a_whole_my_vec(
         panic!();
       };
       resultt
-    },
-    Expect::List(_) =>{
-      if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last_mut() {
-        if let Some(Objects::RenderObject(RenderObject::ListLine(LLL))) = 
-        lt.content.push();
+    }
+    Expect::List(_) => {
+      if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last_mut()
+        && let RenderObject::ListLine(ll) = result
+      {
+        return vec![Objects::RenderObject(RenderObject::ListLine(ListLine {
+          lvl: ll.lvl,
+          content: namumarkresult.to_vec(),
+        }))];
       } else {
         panic!()
       }
-      return namumarkresult.to_vec();
     }
     Expect::None => {
       return namumarkresult.to_vec();
@@ -778,8 +789,7 @@ fn parsing_close(
       || compiler.expected.contains(&Expect::TripleWithNamuMark)
     {
       //리터럴 처리용
-      *result =
-        RenderObject::EarlyParse((Expect::TripleWithNamuMark, namumarkresult.to_vec()));
+      *result = RenderObject::EarlyParse((Expect::TripleWithNamuMark, namumarkresult.to_vec()));
       compiler.index += 3;
       return Some(false);
     } else {

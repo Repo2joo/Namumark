@@ -11,12 +11,12 @@ pub enum RenderObject {
   Literal(String),
   NamumarkMacro(NamumarkMacro),
   List(List),
-  ListLine(ListLine)
+  ListLine(ListLine),
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct ListLine {
-  pub lvl:usize,
-  pub content:Vec<Objects>
+  pub lvl: usize,
+  pub content: Vec<Objects>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum LinkType {
@@ -32,9 +32,9 @@ pub struct Link {
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct List {
-  pub from:usize,
-  pub listtype:ListType,
-  pub content:Vec<ListLine>
+  pub from: usize,
+  pub listtype: ListType,
+  pub content: Vec<ListLine>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct Syntax {
@@ -44,7 +44,7 @@ pub struct Syntax {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Languages {
   NotSupported, //지원하는 언어: 현제 없음
-          //UmLang,
+                //UmLang,
 }
 
 #[derive(Debug, PartialEq, Clone)]

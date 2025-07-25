@@ -1,0 +1,2 @@
+hard_tabs = false       # 탭 대신 스페이스 사용
+tab_spaces = 2          # 1탭 = 2스페이스
