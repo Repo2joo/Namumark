@@ -2,7 +2,7 @@
 //대략적인 파서의 알고리즘을 이해하고 오쇼.
 //그리고 여려움이 있으면 연락하쇼
 use core::panic;
-use std::vec;
+use std::{vec};
 
 use crate::{
   renderobjs::{
@@ -351,6 +351,12 @@ fn namumarker(
         compiler.index += how + 2;
         thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
+        if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last() && let Some(RenderObject::ListLine(ll)) = thisparsing {
+          lt.listtype = ListType::Arabia;
+          lt.content.push(ll);
+        } else {
+          
+        }
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("I.")) {
         compiler.index += how + 2;
         thisparsing = Some(parse_first(compiler, Expect::List(how)));
@@ -688,6 +694,28 @@ fn parsing_close(
       compiler.index += 2;
       return Some(true);
     }
+  } else if compiler.peak("\n") {
+    if matches!(close, Expect::List(_)) {
+      compiler.index += 1;
+      compiler.expected.pop();
+      return Some(false);
+    } else if let Some(Expect::List(lt)) = compiler
+      .expected
+      .iter()
+      .find(|x| matches!(x, Expect::List(_)))
+    {
+      *result = RenderObject::EarlyParse((
+        Expect::List(lt.clone()),
+        a_whole_my_vec(result, namumarkresult, close),
+      ));
+      compiler.index += 1;
+      return Some(false);
+    } else {
+      namumarkresult.push(Objects::Char('\n'));
+      compiler.index += 1;
+      return Some(true); //{{{#!wiki BacktraceFrame
+      //}}}
+    }
   } else if compiler.peak(")]") {
     //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
     if matches!(close, Expect::NamuMacro(_)) {
@@ -710,7 +738,8 @@ fn parsing_close(
       namumarkresult.push(Objects::Char(')'));
       namumarkresult.push(Objects::Char(']'));
       compiler.index += 2;
-      return Some(true);
+      return Some(true); //{{{#!wiki BacktraceFrame
+      //}}}
     }
   } else if compiler.peak("}}}") {
     if *close == Expect::JustTriple
