@@ -27,7 +27,7 @@ pub enum Expect {
     TripleWithNamuMark3,
     JustTriple,
     NamuMacro(NamuMacroType),
-    List(ListType)
+    List(usize),
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum ListType {
@@ -37,7 +37,7 @@ pub enum ListType {
     RomanBig,
     RomanSmall,
     List,
-    Arabia
+    Arabia,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum NamuMacroType {
@@ -127,7 +127,7 @@ impl Compiler {
         return true;
     }
     pub fn peak_repeat_line(&mut self, ch: char, end: Option<&str>) -> (bool, usize) {
-        if self.index == 0 || self.get(self.index-1) == Some(&Objects::Char('\n')) {
+        if self.index == 0 || self.get(self.index - 1) == Some(&Objects::Char('\n')) {
             let mut idx = 0;
             loop {
                 if self.get(self.index + idx) == Some(&Objects::Char(ch)) {

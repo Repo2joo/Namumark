@@ -1,11 +1,7 @@
-use std::{
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::time::Instant;
 
 use structs::Compiler;
 
-use crate::structs::Objects;
 mod renderobjs;
 mod structs;
 #[cfg(test)]
