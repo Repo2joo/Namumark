@@ -23,7 +23,7 @@ pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
   }
   result
 }
-fn prepare_result(close: &Expect, mut result: &mut RenderObject) {
+fn prepare_result(close: &Expect, result: &mut RenderObject) {
   match close {
     Expect::None => *result = RenderObject::NopNopNop,
     Expect::Link => {
@@ -267,6 +267,16 @@ fn namumarker(
         thisparsing = Some(parse_first(
           compiler,
           Expect::NamuMacro(NamuMacroType::NaverTV),
+        ));
+      } else if compiler.peak("[kakaotv(") {
+        compiler.index += 9;
+        compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
+        compiler
+        .expected
+        .push(Expect::NamuMacro(NamuMacroType::KakaoTV));
+        thisparsing = Some(parse_first(
+          compiler,
+          Expect::NamuMacro(NamuMacroType::KakaoTV),
         ));
       } else if compiler.peak("[include(") {
         compiler.index += 9;
@@ -588,7 +598,7 @@ fn a_whole_my_vec(
       };
       return resultt;
     }
-    Expect::NamuMacro(nm) => {
+    Expect::NamuMacro(_) => {
       let mut resultt = vec![Objects::Char('[')];
       if let RenderObject::NamumarkMacro(macroname) = result {
         resultt.extend_from_slice(&slices(macroname.macroname.to_string()));

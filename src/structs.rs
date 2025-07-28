@@ -1,5 +1,4 @@
-use core::slice;
-use std::{fmt, vec};
+use std::vec;
 
 use crate::{parser::parse_first, renderobjs::RenderObject};
 #[derive(Debug)]
