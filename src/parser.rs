@@ -61,6 +61,7 @@ fn prepare_result(close: &Expect, mut result: &mut RenderObject) {
         lvl: lvl.clone(),
         content: Vec::new(),
       })
+    //
     }
   }
 }
@@ -70,6 +71,15 @@ fn namumarker(
   namumarkresult: &mut Vec<Objects>,
   result: &mut RenderObject,
 ) -> bool {
+  fn listeq(namumarkresultlast:Option<&Objects>,listtype:ListType ) -> bool {
+    println!("{:?}", namumarkresultlast);
+    if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresultlast {
+      if lt.listtype == listtype {
+        return false
+      }
+    }
+    return true;
+  }
   if let Some(Objects::Char(ch)) = compiler.current() {
     let ch = ch.to_owned();
     let whattodo = parsing_close(compiler, close, result, namumarkresult);
@@ -349,38 +359,53 @@ fn namumarker(
         true;
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("1.")) {
         compiler.index += how + 2;
-        thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
-        if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last() && let Some(RenderObject::ListLine(ll)) = thisparsing {
-          lt.listtype = ListType::Arabia;
-          lt.content.push(ll);
-        } else {
-          
+        thisparsing = Some(parse_first(compiler, Expect::List(how)));
+        if listeq(namumarkresult.last(), ListType::Arabia) {
+          namumarkresult.push(Objects::RenderObject(RenderObject::List(List { from: 0, listtype:ListType::Arabia , content:Vec::new()  })));
         }
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("I.")) {
         compiler.index += how + 2;
-        thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
+        thisparsing = Some(parse_first(compiler, Expect::List(how)));
+        if listeq(namumarkresult.last(), ListType::RomanBig) {
+          namumarkresult.push(Objects::RenderObject(RenderObject::List(List { from: 0, listtype:ListType::RomanBig, content:Vec::new()  })));
+        }
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("i.")) {
         compiler.index += how + 2;
-        thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
+        thisparsing = Some(parse_first(compiler, Expect::List(how)));
+        if listeq(namumarkresult.last(), ListType::RomanSmall) {
+          namumarkresult.push(Objects::RenderObject(RenderObject::List(List { from: 0, listtype:ListType::RomanSmall , content:Vec::new()  })));
+        }
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("A.")) {
         compiler.index += how + 2;
-        thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
+        thisparsing = Some(parse_first(compiler, Expect::List(how)));
+        if listeq(namumarkresult.last(), ListType::AlphaBig) {
+          namumarkresult.push(Objects::RenderObject(RenderObject::List(List { from: 0, listtype:ListType::AlphaBig , content:Vec::new()  })));
+        }
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("a.")) {
         compiler.index += how + 2;
-        thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
+        thisparsing = Some(parse_first(compiler, Expect::List(how)));
+        if listeq(namumarkresult.last(), ListType::AlphaSmall) {
+          namumarkresult.push(Objects::RenderObject(RenderObject::List(List { from: 0, listtype:ListType::AlphaSmall , content:Vec::new()  })));
+        }
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("가.")) {
         compiler.index += how + 2;
-        thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
+        thisparsing = Some(parse_first(compiler, Expect::List(how)));
+        if listeq(namumarkresult.last(), ListType::Hangul) {
+          namumarkresult.push(Objects::RenderObject(RenderObject::List(List { from: 0, listtype:ListType::Hangul , content:Vec::new()  })));
+        }
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("*")) {
         compiler.index += how + 1;
-        thisparsing = Some(parse_first(compiler, Expect::List(how)));
         compiler.expected.push(Expect::List(0));
+        thisparsing = Some(parse_first(compiler, Expect::List(how)));
+        if listeq(namumarkresult.last(), ListType::List) {
+          namumarkresult.push(Objects::RenderObject(RenderObject::List(List { from: 0, listtype:ListType::List, content:Vec::new()  })));
+        }
       } else {
         namumarkresult.push(Objects::Char(ch));
         compiler.index += 1;
@@ -457,6 +482,14 @@ fn namumarker(
                   if let RenderObject::NamuTriple(nt) = result {
                     let rs = String::from(&nt.triplename);
                     *result = RenderObject::Literal(rs);
+                    return false;
+                  } else {
+                    panic!()
+                  }
+                }
+                Expect::List(how) => {
+                  if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last_mut() {
+                    lt.content.push(ListLine { lvl: how, content: tuple.1 });
                     return false;
                   } else {
                     panic!()
@@ -623,8 +656,7 @@ fn a_whole_my_vec(
       resultt
     }
     Expect::List(_) => {
-      if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last_mut()
-        && let RenderObject::ListLine(ll) = result
+      if let RenderObject::ListLine(ll) = result
       {
         return vec![Objects::RenderObject(RenderObject::ListLine(ListLine {
           lvl: ll.lvl,
@@ -698,6 +730,9 @@ fn parsing_close(
     if matches!(close, Expect::List(_)) {
       compiler.index += 1;
       compiler.expected.pop();
+      if let RenderObject::ListLine(ll) = result {
+        ll.content = namumarkresult.to_vec();
+      }
       return Some(false);
     } else if let Some(Expect::List(lt)) = compiler
       .expected
@@ -711,9 +746,7 @@ fn parsing_close(
       compiler.index += 1;
       return Some(false);
     } else {
-      namumarkresult.push(Objects::Char('\n'));
-      compiler.index += 1;
-      return Some(true); //{{{#!wiki BacktraceFrame
+      return None;
       //}}}
     }
   } else if compiler.peak(")]") {

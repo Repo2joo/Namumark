@@ -131,7 +131,6 @@ impl Compiler {
       let mut idx = 0;
       loop {
         if self.get(self.index + idx) == Some(&Objects::Char(ch)) {
-          println!("a");
           idx += 1;
         } else if end == None {
           return (true, idx);
