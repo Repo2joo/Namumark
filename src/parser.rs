@@ -576,7 +576,14 @@ fn namumarker(
         *result = RenderObject::NopString(Expect::JustTriple);
         return false;
       }
-
+      if matches!(find, &Expect::List(_)) {
+        if let Expect::List(how) = close {
+          *result = RenderObject::List(ListLine {
+            lvl:how,
+            content:namumarkresult.to_vec(),
+          })
+        }
+      }
       *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
       return false;
     }
