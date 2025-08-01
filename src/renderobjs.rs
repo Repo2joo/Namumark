@@ -12,6 +12,17 @@ pub enum RenderObject {
   NamumarkMacro(NamumarkMacro),
   List(List),
   ListLine(ListLine),
+  Quote(Quote),
+  QuoteLine(QuoteLine),
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct QuoteLine {
+  pub lvl: usize,
+  pub content: Vec<Objects>,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct Quote {
+  pub content: Vec<QuoteLine>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct ListLine {

@@ -27,6 +27,7 @@ pub enum Expect {
   JustTriple,
   NamuMacro(NamuMacroType),
   List(usize),
+  Quote(usize),
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum ListType {
@@ -131,12 +132,16 @@ impl Compiler {
       loop {
         if self.get(self.index + idx) == Some(&Objects::Char(ch)) {
           idx += 1;
-        } else if end == None {
+        } else if end == None && idx != 0 {
+          print!("avan");
           return (true, idx);
-        } else if 에휴_진짜_왜그럼(
-          &self.array[self.index + idx..end.unwrap().len() + self.index + idx],
-        ) == String::from(end.unwrap())
+        } else if end.is_some()
+          && 에휴_진짜_왜그럼(
+            &self.array[self.index + idx..end.unwrap().len() + self.index + idx],
+          ) == String::from(end.unwrap())
+          && idx != 0
         {
+          println!("a");
           return (true, idx);
         } else {
           return (false, 0);
