@@ -6,8 +6,7 @@ use std::{mem::discriminant, vec};
 
 use crate::{
   renderobjs::{
-    Languages, Link, LinkType, List, ListLine, NamuTriple, NamumarkMacro, Quote, QuoteLine,
-    RenderObject, Syntax,
+    Heading, Languages, Link, LinkType, List, ListLine, NamuTriple, NamumarkMacro, Quote, QuoteLine, RenderObject, Syntax
   },
   structs::{Compiler, Expect, ListType, NamuMacroType, Objects},
 };
@@ -69,6 +68,13 @@ fn prepare_result(close: &Expect, result: &mut RenderObject) {
         lvl: lvl.clone(),
         content: Vec::new(),
       })
+    },
+    Expect::Heading(lvl) => {
+      *result = RenderObject::Heading(Heading {
+        lvl:*lvl,
+        folded:false,
+        content:Vec::new()
+      })
     }
   }
 }
@@ -79,7 +85,6 @@ fn namumarker(
   result: &mut RenderObject,
 ) -> bool {
   fn listeq(namumarkresultlast: Option<&Objects>, listtype: ListType) -> bool {
-
     if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresultlast {
       if lt.listtype == listtype {
         return false;
@@ -452,9 +457,14 @@ fn namumarker(
           })));
         }
       } else if let (true, how) = compiler.peak_repeat_line('>', None) {
-        compiler.index += how;
-        compiler.expected.push(Expect::Quote(0));
-        thisparsing = Some(parse_first(compiler, Expect::Quote(how)));
+        if how <= 8 {
+          compiler.index += how;
+          thisparsing = Some(parse_first(compiler, Expect::Quote(how)));
+          compiler.expected.push(Expect::Quote(0));
+        } else {
+          compiler.index += 1;
+          namumarkresult.push(Objects::Char('>'));
+        }
         if !matches!(
           namumarkresult.last(),
           Some(Objects::RenderObject(RenderObject::Quote(_)))
@@ -462,6 +472,15 @@ fn namumarker(
           namumarkresult.push(Objects::RenderObject(RenderObject::Quote(Quote {
             content: Vec::new(),
           })));
+        }
+      } else if let (true, how) = compiler.peak_repeat_line('=', None) {
+        if how <= 6 {
+          compiler.index += how;
+          thisparsing = Some(parse_first(compiler, Expect::Heading(how)));
+          compiler.expected.push(Expect::Heading(0));
+        } else {
+          compiler.index += 1;
+          namumarkresult.push(Objects::Char('='));
         }
       } else {
         namumarkresult.push(Objects::Char(ch));
@@ -474,6 +493,11 @@ fn namumarker(
           RenderObject::Nop(items) => {
             compiler.expected.pop();
             namumarkresult.extend(items);
+            if matches!(close, Expect::Heading(_)) && let Expect::Heading(how) = close {
+              for _ in 0..how.clone() {
+                namumarkresult.insert(0, Objects::Char('='));
+              }
+            }
             *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
             false
           }
@@ -500,7 +524,6 @@ fn namumarker(
             return false;
           }
           RenderObject::EarlyParse(tuple) => {
-
             compiler.expected.pop();
             if discriminant(close) == discriminant(&tuple.0) {
               match tuple.0 {
@@ -556,6 +579,14 @@ fn namumarker(
                     ll.content.extend(tuple.1);
                   }
                   return false;
+                },
+                Expect::Heading(_) => {
+                  if let RenderObject::Heading(HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck) = result {
+                    HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.extend(namumarkresult.to_vec());
+                    return false;
+                  } else {
+                    panic!()
+                  }
                 }
                 _ => panic!(), //여기서 처리하는 건 없음
               }
@@ -568,7 +599,6 @@ fn namumarker(
               return false;
             }
           } //[[ {{{#!wiki 안녕]] }}} 대충 이런거 처리용
-          RenderObject::NopNopNop => panic!("이게 뭐value하는 베리언트였더라"),
           RenderObject::ListLine(ll) => {
             if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last_mut() {
               lt.content.push(ll);
@@ -600,6 +630,7 @@ fn namumarker(
                 panic!()
               }
             } else {
+              //NopNopNop이 이러라고 만든 베리언트는 아닌걸로 알고 있는데
               namumarkresult.push(Objects::RenderObject(obj));
             }
             true
@@ -775,6 +806,11 @@ fn a_whole_my_vec(
       } else {
         panic!()
       }
+    },
+    Expect::Heading(how) => {
+        let mut rt = slices("=".repeat(how.clone()));
+        rt.extend(namumarkresult.to_vec());
+        return rt;
     }
     Expect::None => {
       return namumarkresult.to_vec();
@@ -844,7 +880,9 @@ fn parsing_close(
         ll.content = namumarkresult.to_vec();
       }
       return Some(false);
-    } else if let Some(Expect::List(lt)) = compiler
+    }
+    //listSibal
+    if let Some(Expect::List(lt)) = compiler
       .expected
       .iter()
       .find(|x| matches!(x, Expect::List(_)))
@@ -855,7 +893,9 @@ fn parsing_close(
       ));
       compiler.index += 1;
       return Some(false);
-    } else if matches!(close, Expect::Quote(_)) {
+    }
+    //QuoteSibal
+    if matches!(close, Expect::Quote(_)) {
       compiler.index += 1;
       compiler.expected.pop();
       if let RenderObject::QuoteLine(ql) = result {
@@ -867,19 +907,30 @@ fn parsing_close(
       .iter()
       .find(|x| matches!(x, Expect::Quote(_)))
     {
-
       *result = RenderObject::EarlyParse((
         Expect::Quote(IHateQTBecauseItsWorseThanLGPL.clone()),
         a_whole_my_vec(result, namumarkresult, close),
       ));
       compiler.index += 1;
       return Some(false);
-    } else {
-      return None;
-      //}}}
     }
+    //HeadingSibal
+    if matches!(close, Expect::Heading(_)) {
+      compiler.expected.pop();
+      compiler.expected.push(Expect::None);
+      return Some(true);
+    } else if let Some(idx) = compiler.expected.iter().position(|x| matches!(x, &Expect::Heading(_)))
+    {
+      compiler.expected.remove(idx);
+      compiler.expected.insert(idx, Expect::None);
+      return Some(true);
+    }
+
+
+    return None;
+      //}}}
   } else if compiler.peak(")]") {
-    //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
+    //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...#[doc("뭔가 내 취향이긴 한데 메크로 rust-style로 쓸 수 있었으면...")]"
     if matches!(close, Expect::NamuMacro(_)) {
       compiler.index += 2;
       compiler.lastrollbackindex.pop();
@@ -904,6 +955,70 @@ fn parsing_close(
 
       //}}}
     }
+  } else if compiler.peak("=\n") || (compiler.peak("=") && compiler.index + 1 == compiler.array.len()) {
+    if matches!(close, Expect::Heading(_)) {
+      compiler.index += 2;
+      compiler.lastrollbackindex.pop();
+      compiler.expected.pop();
+      if let RenderObject::Heading(HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck) = result {
+        HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content = namumarkresult.to_vec();
+        let mut index = 1;
+        let mut reversed = namumarkresult.to_owned();
+        reversed.reverse();
+        for item in reversed {
+          if let Objects::Char('=') = item && index < 6 {
+            index += 1;
+          } else {
+            let bigger = std::cmp::max(HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl, index);
+            if HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl == index {
+
+              if namumarkresult.get(0) == Some(&Objects::Char('#')) && namumarkresult.get(namumarkresult.len()-index) == Some(&Objects::Char('#')) {
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.folded = true;
+              }
+              for _ in 1..index {
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.pop();
+              }
+            } else if bigger == HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl {
+              if namumarkresult.get(0) == Some(&Objects::Char('#')) && namumarkresult.get(namumarkresult.len()-index) == Some(&Objects::Char('#')) {
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.folded = true;
+              }
+              for _ in 1..index {
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.insert(0, Objects::Char('='));
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.pop();
+              }
+              HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl = index;
+            } else if bigger == index {
+              if namumarkresult.get(0) == Some(&Objects::Char('#')) && namumarkresult.get(namumarkresult.len()-index) == Some(&Objects::Char('#')) {
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.folded = true;
+              }
+              for _ in 1..HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl {
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.pop();
+              }
+            }
+            break;
+          }
+        }
+      }
+      return Some(false);
+    } else if let Some(Expect::Heading(nt)) = compiler
+      .expected
+      .iter()
+      .find(|x| matches!(x, Expect::Heading(_)))
+      {
+        *result = RenderObject::EarlyParse((
+          Expect::Heading(nt.clone()),
+                                            a_whole_my_vec(result, namumarkresult, close),
+        ));
+        compiler.index += 2;
+        return Some(false);
+      } else {
+        namumarkresult.push(Objects::Char('='));
+        namumarkresult.push(Objects::Char('\n'));
+        compiler.index += 2;
+        return Some(true); //{{{#!wiki BacktraceFrame
+
+        //}}}
+      }
   } else if compiler.peak("}}}") {
     if *close == Expect::JustTriple
       || *close == Expect::SyntaxTriple
