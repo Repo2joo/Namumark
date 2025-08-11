@@ -160,7 +160,8 @@ impl Compiler {
         } else if end == None && idx != 0 {
           return (true, idx);
         } else if end.is_some()
-          && end.unwrap().len() + self.index + idx+1 <= self.array.len() && 에휴_진짜_왜그럼(
+          && end.unwrap().len() + self.index + idx + 1 <= self.array.len()
+          && 에휴_진짜_왜그럼(
             &self.array[self.index + idx..end.unwrap().len() + self.index + idx],
           ) == String::from(end.unwrap())
           && idx != 0

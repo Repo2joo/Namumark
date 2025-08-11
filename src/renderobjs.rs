@@ -26,7 +26,7 @@ pub struct Heading {
   ///=의 개수
   pub lvl: usize,
   ///접힘 여부
-  pub folded:bool,
+  pub folded: bool,
   ///=와 =사이의 내용. 나무마크가 들어갈 수 있습니다.
   pub content: Vec<Objects>,
 }
@@ -82,7 +82,6 @@ pub struct Syntax {
 #[derive(Debug, PartialEq, Clone)]
 ///아직 지원 하는 언어가 없어요
 pub enum Languages {
-
   NotSupported, //지원하는 언어: 현제 없음
                 //UmLang,
 }

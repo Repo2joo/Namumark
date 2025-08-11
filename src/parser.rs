@@ -6,7 +6,8 @@ use std::{mem::discriminant, vec};
 
 use crate::{
   renderobjs::{
-    Heading, Languages, Link, LinkType, List, ListLine, NamuTriple, NamumarkMacro, Quote, QuoteLine, RenderObject, Syntax
+    Heading, Languages, Link, LinkType, List, ListLine, NamuTriple, NamumarkMacro, Quote,
+    QuoteLine, RenderObject, Syntax,
   },
   structs::{Compiler, Expect, ListType, NamuMacroType, Objects},
 };
@@ -68,12 +69,12 @@ fn prepare_result(close: &Expect, result: &mut RenderObject) {
         lvl: lvl.clone(),
         content: Vec::new(),
       })
-    },
+    }
     Expect::Heading(lvl) => {
       *result = RenderObject::Heading(Heading {
-        lvl:*lvl,
-        folded:false,
-        content:Vec::new()
+        lvl: *lvl,
+        folded: false,
+        content: Vec::new(),
       })
     }
   }
@@ -379,6 +380,160 @@ fn namumarker(
           }
         }
         true;
+      } else if compiler.peak("{{{#aliceblue")
+        || compiler.peak("{{{#antiquewhite")
+        || compiler.peak("{{{#aqua")
+        || compiler.peak("{{{#aquamarine")
+        || compiler.peak("{{{#azure")
+        || compiler.peak("{{{#beige")
+        || compiler.peak("{{{#bisque")
+        || compiler.peak("{{{#black")
+        || compiler.peak("{{{#blanchedalmond")
+        || compiler.peak("{{{#blue")
+        || compiler.peak("{{{#blueviolet")
+        || compiler.peak("{{{#brown")
+        || compiler.peak("{{{#burlywood")
+        || compiler.peak("{{{#cadetblue")
+        || compiler.peak("{{{#chartreuse")
+        || compiler.peak("{{{#chocolate")
+        || compiler.peak("{{{#coral")
+        || compiler.peak("{{{#cornflowerblue")
+        || compiler.peak("{{{#cornsilk")
+        || compiler.peak("{{{#crimson")
+        || compiler.peak("{{{#cyan")
+        || compiler.peak("{{{#darkblue")
+        || compiler.peak("{{{#darkcyan")
+        || compiler.peak("{{{#darkgoldenrod")
+        || compiler.peak("{{{#darkgray")
+        || compiler.peak("{{{#darkgrey")
+        || compiler.peak("{{{#darkgreen")
+        || compiler.peak("{{{#darkkhaki")
+        || compiler.peak("{{{#darkmagenta")
+        || compiler.peak("{{{#darkolivegreen")
+        || compiler.peak("{{{#darkorange")
+        || compiler.peak("{{{#darkorchid")
+        || compiler.peak("{{{#darkred")
+        || compiler.peak("{{{#darksalmon")
+        || compiler.peak("{{{#darkseagreen")
+        || compiler.peak("{{{#darkslateblue")
+        || compiler.peak("{{{#darkslategray")
+        || compiler.peak("{{{#darkslategrey")
+        || compiler.peak("{{{#darkturquoise")
+        || compiler.peak("{{{#darkviolet")
+        || compiler.peak("{{{#deeppink")
+        || compiler.peak("{{{#deepskyblue")
+        || compiler.peak("{{{#dimgray")
+        || compiler.peak("{{{#dimgrey")
+        || compiler.peak("{{{#dodgerblue")
+        || compiler.peak("{{{#firebrick")
+        || compiler.peak("{{{#floralwhite")
+        || compiler.peak("{{{#forestgreen")
+        || compiler.peak("{{{#fuchsia")
+        || compiler.peak("{{{#gainsboro")
+        || compiler.peak("{{{#ghostwhite")
+        || compiler.peak("{{{#gold")
+        || compiler.peak("{{{#goldenrod")
+        || compiler.peak("{{{#gray")
+        || compiler.peak("{{{#grey")
+        || compiler.peak("{{{#green")
+        || compiler.peak("{{{#greenyellow")
+        || compiler.peak("{{{#honeydew")
+        || compiler.peak("{{{#hotpink")
+        || compiler.peak("{{{#indianred")
+        || compiler.peak("{{{#indigo")
+        || compiler.peak("{{{#ivory")
+        || compiler.peak("{{{#khaki")
+        || compiler.peak("{{{#lavender")
+        || compiler.peak("{{{#lavenderblush")
+        || compiler.peak("{{{#lawngreen")
+        || compiler.peak("{{{#lemonchiffon")
+        || compiler.peak("{{{#lightblue")
+        || compiler.peak("{{{#lightcoral")
+        || compiler.peak("{{{#lightcyan")
+        || compiler.peak("{{{#lightgoldenrodyellow")
+        || compiler.peak("{{{#lightgray")
+        || compiler.peak("{{{#lightgrey")
+        || compiler.peak("{{{#lightgreen")
+        || compiler.peak("{{{#lightpink")
+        || compiler.peak("{{{#lightsalmon")
+        || compiler.peak("{{{#lightseagreen")
+        || compiler.peak("{{{#lightskyblue")
+        || compiler.peak("{{{#lightslategray")
+        || compiler.peak("{{{#lightslategrey")
+        || compiler.peak("{{{#lightsteelblue")
+        || compiler.peak("{{{#lightyellow")
+        || compiler.peak("{{{#lime")
+        || compiler.peak("{{{#limegreen")
+        || compiler.peak("{{{#linen")
+        || compiler.peak("{{{#magenta")
+        || compiler.peak("{{{#maroon")
+        || compiler.peak("{{{#mediumaquamarine")
+        || compiler.peak("{{{#mediumblue")
+        || compiler.peak("{{{#mediumorchid")
+        || compiler.peak("{{{#mediumpurple")
+        || compiler.peak("{{{#mediumseagreen")
+        || compiler.peak("{{{#mediumslateblue")
+        || compiler.peak("{{{#mediumspringgreen")
+        || compiler.peak("{{{#mediumturquoise")
+        || compiler.peak("{{{#mediumvioletred")
+        || compiler.peak("{{{#midnightblue")
+        || compiler.peak("{{{#mintcream")
+        || compiler.peak("{{{#mistyrose")
+        || compiler.peak("{{{#moccasin")
+        || compiler.peak("{{{#navajowhite")
+        || compiler.peak("{{{#navy")
+        || compiler.peak("{{{#oldlace")
+        || compiler.peak("{{{#olive")
+        || compiler.peak("{{{#olivedrab")
+        || compiler.peak("{{{#orange")
+        || compiler.peak("{{{#orangered")
+        || compiler.peak("{{{#orchid")
+        || compiler.peak("{{{#palegoldenrod")
+        || compiler.peak("{{{#palegreen")
+        || compiler.peak("{{{#paleturquoise")
+        || compiler.peak("{{{#palevioletred")
+        || compiler.peak("{{{#papayawhip")
+        || compiler.peak("{{{#peachpuff")
+        || compiler.peak("{{{#peru")
+        || compiler.peak("{{{#pink")
+        || compiler.peak("{{{#plum")
+        || compiler.peak("{{{#powderblue")
+        || compiler.peak("{{{#purple")
+        || compiler.peak("{{{#rebeccapurple")
+        || compiler.peak("{{{#red")
+        || compiler.peak("{{{#rosybrown")
+        || compiler.peak("{{{#royalblue")
+        || compiler.peak("{{{#saddlebrown")
+        || compiler.peak("{{{#salmon")
+        || compiler.peak("{{{#sandybrown")
+        || compiler.peak("{{{#seagreen")
+        || compiler.peak("{{{#seashell")
+        || compiler.peak("{{{#sienna")
+        || compiler.peak("{{{#silver")
+        || compiler.peak("{{{#skyblue")
+        || compiler.peak("{{{#slateblue")
+        || compiler.peak("{{{#slategray")
+        || compiler.peak("{{{#slategrey")
+        || compiler.peak("{{{#snow")
+        || compiler.peak("{{{#springgreen")
+        || compiler.peak("{{{#steelblue")
+        || compiler.peak("{{{#tan")
+        || compiler.peak("{{{#teal")
+        || compiler.peak("{{{#thistle")
+        || compiler.peak("{{{#tomato")
+        || compiler.peak("{{{#turquoise")
+        || compiler.peak("{{{#violet")
+        || compiler.peak("{{{#wheat")
+        || compiler.peak("{{{#white")
+        || compiler.peak("{{{#whitesmoke")
+        || compiler.peak("{{{#yellow")
+        || compiler.peak("{{{#yellowgreen")
+      { //출처:https://www.w3schools.com/cssref/css_colors.php
+        //여기 있는 html을 대충 정규식 만들어서 컬러만 받아온다음에 rust로 tolowercase해갖고 나온 결과물을 stdout으로 파일에 쓴다음에 또 정규식으로 조건문으로 만들었답니다.
+        //그니까 출처 안적으면 안되지 않을까
+        //todo: 일단 파싱 하게되면 컬러 따고 인덱스 자동으로 올리고
+        //담부턴 관여 X
+        //이것만 하면 1단계 찐완성 아자아자
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("1.")) {
         compiler.index += how + 2;
         compiler.expected.push(Expect::List(0));
@@ -493,7 +648,9 @@ fn namumarker(
           RenderObject::Nop(items) => {
             compiler.expected.pop();
             namumarkresult.extend(items);
-            if matches!(close, Expect::Heading(_)) && let Expect::Heading(how) = close {
+            if matches!(close, Expect::Heading(_))
+              && let Expect::Heading(how) = close
+            {
               for _ in 0..how.clone() {
                 namumarkresult.insert(0, Objects::Char('='));
               }
@@ -579,10 +736,15 @@ fn namumarker(
                     ll.content.extend(tuple.1);
                   }
                   return false;
-                },
+                }
                 Expect::Heading(_) => {
-                  if let RenderObject::Heading(HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck) = result {
-                    HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.extend(namumarkresult.to_vec());
+                  if let RenderObject::Heading(
+                    HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck,
+                  ) = result
+                  {
+                    HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck
+                      .content
+                      .extend(namumarkresult.to_vec());
                     return false;
                   } else {
                     panic!()
@@ -806,11 +968,11 @@ fn a_whole_my_vec(
       } else {
         panic!()
       }
-    },
+    }
     Expect::Heading(how) => {
-        let mut rt = slices("=".repeat(how.clone()));
-        rt.extend(namumarkresult.to_vec());
-        return rt;
+      let mut rt = slices("=".repeat(how.clone()));
+      rt.extend(namumarkresult.to_vec());
+      return rt;
     }
     Expect::None => {
       return namumarkresult.to_vec();
@@ -919,16 +1081,18 @@ fn parsing_close(
       compiler.expected.pop();
       compiler.expected.push(Expect::None);
       return Some(true);
-    } else if let Some(idx) = compiler.expected.iter().position(|x| matches!(x, &Expect::Heading(_)))
+    } else if let Some(idx) = compiler
+      .expected
+      .iter()
+      .position(|x| matches!(x, &Expect::Heading(_)))
     {
       compiler.expected.remove(idx);
       compiler.expected.insert(idx, Expect::None);
       return Some(true);
     }
 
-
     return None;
-      //}}}
+    //}}}
   } else if compiler.peak(")]") {
     //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...#[doc("뭔가 내 취향이긴 한데 메크로 rust-style로 쓸 수 있었으면...")]"
     if matches!(close, Expect::NamuMacro(_)) {
@@ -955,7 +1119,9 @@ fn parsing_close(
 
       //}}}
     }
-  } else if compiler.peak("=\n") || (compiler.peak("=") && compiler.index + 1 == compiler.array.len()) {
+  } else if compiler.peak("=\n")
+    || (compiler.peak("=") && compiler.index + 1 == compiler.array.len())
+  {
     if matches!(close, Expect::Heading(_)) {
       compiler.index += 2;
       compiler.lastrollbackindex.pop();
@@ -966,33 +1132,51 @@ fn parsing_close(
         let mut reversed = namumarkresult.to_owned();
         reversed.reverse();
         for item in reversed {
-          if let Objects::Char('=') = item && index < 6 {
+          if let Objects::Char('=') = item
+            && index < 6
+          {
             index += 1;
           } else {
-            let bigger = std::cmp::max(HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl, index);
+            let bigger = std::cmp::max(
+              HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl,
+              index,
+            );
             if HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl == index {
-
-              if namumarkresult.get(0) == Some(&Objects::Char('#')) && namumarkresult.get(namumarkresult.len()-index) == Some(&Objects::Char('#')) {
+              if namumarkresult.get(0) == Some(&Objects::Char('#'))
+                && namumarkresult.get(namumarkresult.len() - index) == Some(&Objects::Char('#'))
+              {
                 HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.folded = true;
               }
               for _ in 1..index {
-                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.pop();
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck
+                  .content
+                  .pop();
               }
             } else if bigger == HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl {
-              if namumarkresult.get(0) == Some(&Objects::Char('#')) && namumarkresult.get(namumarkresult.len()-index) == Some(&Objects::Char('#')) {
+              if namumarkresult.get(0) == Some(&Objects::Char('#'))
+                && namumarkresult.get(namumarkresult.len() - index) == Some(&Objects::Char('#'))
+              {
                 HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.folded = true;
               }
               for _ in 1..index {
-                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.insert(0, Objects::Char('='));
-                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.pop();
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck
+                  .content
+                  .insert(0, Objects::Char('='));
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck
+                  .content
+                  .pop();
               }
               HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl = index;
             } else if bigger == index {
-              if namumarkresult.get(0) == Some(&Objects::Char('#')) && namumarkresult.get(namumarkresult.len()-index) == Some(&Objects::Char('#')) {
+              if namumarkresult.get(0) == Some(&Objects::Char('#'))
+                && namumarkresult.get(namumarkresult.len() - index) == Some(&Objects::Char('#'))
+              {
                 HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.folded = true;
               }
               for _ in 1..HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.lvl {
-                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck.content.pop();
+                HDDIsQuietAwesomeBecauseImRunnungMyLinuxonSDCardFuck
+                  .content
+                  .pop();
               }
             }
             break;
@@ -1004,21 +1188,21 @@ fn parsing_close(
       .expected
       .iter()
       .find(|x| matches!(x, Expect::Heading(_)))
-      {
-        *result = RenderObject::EarlyParse((
-          Expect::Heading(nt.clone()),
-                                            a_whole_my_vec(result, namumarkresult, close),
-        ));
-        compiler.index += 2;
-        return Some(false);
-      } else {
-        namumarkresult.push(Objects::Char('='));
-        namumarkresult.push(Objects::Char('\n'));
-        compiler.index += 2;
-        return Some(true); //{{{#!wiki BacktraceFrame
+    {
+      *result = RenderObject::EarlyParse((
+        Expect::Heading(nt.clone()),
+        a_whole_my_vec(result, namumarkresult, close),
+      ));
+      compiler.index += 2;
+      return Some(false);
+    } else {
+      namumarkresult.push(Objects::Char('='));
+      namumarkresult.push(Objects::Char('\n'));
+      compiler.index += 2;
+      return Some(true); //{{{#!wiki BacktraceFrame
 
-        //}}}
-      }
+      //}}}
+    }
   } else if compiler.peak("}}}") {
     if *close == Expect::JustTriple
       || *close == Expect::SyntaxTriple
