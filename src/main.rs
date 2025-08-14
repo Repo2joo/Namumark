@@ -31,14 +31,22 @@ mod parser; //아 이거 복잡하다
 //Trait Implementations, Auto Trait Implementations, Blanket Implementations는 무시하세요.
 //그 impl들은 이 크레이트에서 직접 구현된 적이 없습니다.
 //그냥 Implmentations는 참고 하여도 좋습니다. 모든 일반 impl들은 믿을 수 있는 사람(?)이 구현한것입니다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 fn main() {
-  let teststr = "===#ㅁㄴㅇㄹ======";
+  let teststr = "linear-gradient 있었으면 개발 접었을뻔";
   let mut compiler = Compiler::from(teststr.to_owned());
-  let start = Instant::now();
-  compiler.parse();
-  let es = start.elapsed();
-  println!(
-    "In {:?}\nfixed:{:?}\nredirect:{:?}\n parsed: {:#?}\n",
-    es, compiler.fixed_comments, compiler.redirect, compiler.array
-  );
+  println!("{}",  compiler.is_color())
 }

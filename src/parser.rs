@@ -76,6 +76,9 @@ fn prepare_result(close: &Expect, result: &mut RenderObject) {
         folded: false,
         content: Vec::new(),
       })
+    },
+    Expect::Color  => {
+      panic!("not covered")
     }
   }
 }
@@ -531,6 +534,9 @@ fn namumarker(
       { //출처:https://www.w3schools.com/cssref/css_colors.php
         //여기 있는 html을 대충 정규식 만들어서 컬러만 받아온다음에 rust로 tolowercase해갖고 나온 결과물을 stdout으로 파일에 쓴다음에 또 정규식으로 조건문으로 만들었답니다.
         //그니까 출처 안적으면 안되지 않을까
+        compiler.index += 4;
+        compiler.expected.push(Expect::Color);
+        thisparsing = Some(parse_first(compiler, Expect::Color));
         //todo: 일단 파싱 하게되면 컬러 따고 인덱스 자동으로 올리고
         //담부턴 관여 X
         //이것만 하면 1단계 찐완성 아자아자

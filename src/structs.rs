@@ -36,6 +36,7 @@ pub enum Expect {
   List(usize),
   Quote(usize),
   Heading(usize),
+  Color,
 }
 #[derive(Debug, PartialEq, Clone)]
 /// *, 1., I, 등등의 리스트의 타입을 나타내는 enum입니다. 힌글은 원작에서 지원하는지 기억이 안나서 그냥 넣었습니다.
@@ -175,6 +176,266 @@ impl Compiler {
     } else {
       (false, 0)
     }
+  }
+  pub fn is_color (&self) -> bool {
+    fn is_hex(ch:char) -> bool {
+      ch.to_ascii_lowercase() == '0'
+      ||ch.to_ascii_lowercase() == '1'
+      ||ch.to_ascii_lowercase() == '2'
+      ||ch.to_ascii_lowercase() == '3'
+      ||ch.to_ascii_lowercase() == '4'
+      ||ch.to_ascii_lowercase() == '5'
+      ||ch.to_ascii_lowercase() == '6'
+      ||ch.to_ascii_lowercase() == '7'
+      ||ch.to_ascii_lowercase() == '8'
+      ||ch.to_ascii_lowercase() == '9'
+      ||ch.to_ascii_lowercase() == 'a'
+      ||ch.to_ascii_lowercase() == 'b'
+      ||ch.to_ascii_lowercase() == 'c'
+      ||ch.to_ascii_lowercase() == 'd'
+      ||ch.to_ascii_lowercase() == 'e'
+      ||ch.to_ascii_lowercase() == 'f'
+    }
+    let munjayeol = "{{{#";
+    let colors:[&str; 148] = ["aliceblue",
+    "antiquewhite",
+    "aqua",
+    "aquamarine",
+    "azure",
+    "beige",
+    "bisque",
+    "black",
+    "blanchedalmond",
+    "blue",
+    "blueviolet",
+    "brown",
+    "burlywood",
+    "cadetblue",
+    "chartreuse",
+    "chocolate",
+    "coral",
+    "cornflowerblue",
+    "cornsilk",
+    "crimson",
+    "cyan",
+    "darkblue",
+    "darkcyan",
+    "darkgoldenrod",
+    "darkgray",
+    "darkgrey",
+    "darkgreen",
+    "darkkhaki",
+    "darkmagenta",
+    "darkolivegreen",
+    "darkorange",
+    "darkorchid",
+    "darkred",
+    "darksalmon",
+    "darkseagreen",
+    "darkslateblue",
+    "darkslategray",
+    "darkslategrey",
+    "darkturquoise",
+    "darkviolet",
+    "deeppink",
+    "deepskyblue",
+    "dimgray",
+    "dimgrey",
+    "dodgerblue",
+    "firebrick",
+    "floralwhite",
+    "forestgreen",
+    "fuchsia",
+    "gainsboro",
+    "ghostwhite",
+    "gold",
+    "goldenrod",
+    "gray",
+    "grey",
+    "green",
+    "greenyellow",
+    "honeydew",
+    "hotpink",
+    "indianred",
+    "indigo",
+    "ivory",
+    "khaki",
+    "lavender",
+    "lavenderblush",
+    "lawngreen",
+    "lemonchiffon",
+    "lightblue",
+    "lightcoral",
+    "lightcyan",
+    "lightgoldenrodyellow",
+    "lightgray",
+    "lightgrey",
+    "lightgreen",
+    "lightpink",
+    "lightsalmon",
+    "lightseagreen",
+    "lightskyblue",
+    "lightslategray",
+    "lightslategrey",
+    "lightsteelblue",
+    "lightyellow",
+    "lime",
+    "limegreen",
+    "linen",
+    "magenta",
+    "maroon",
+    "mediumaquamarine",
+    "mediumblue",
+    "mediumorchid",
+    "mediumpurple",
+    "mediumseagreen",
+    "mediumslateblue",
+    "mediumspringgreen",
+    "mediumturquoise",
+    "mediumvioletred",
+    "midnightblue",
+    "mintcream",
+    "mistyrose",
+    "moccasin",
+    "navajowhite",
+    "navy",
+    "oldlace",
+    "olive",
+    "olivedrab",
+    "orange",
+    "orangered",
+    "orchid",
+    "palegoldenrod",
+    "palegreen",
+    "paleturquoise",
+    "palevioletred",
+    "papayawhip",
+    "peachpuff",
+    "peru",
+    "pink",
+    "plum",
+    "powderblue",
+    "purple",
+    "rebeccapurple",
+    "red",
+    "rosybrown",
+    "royalblue",
+    "saddlebrown",
+    "salmon",
+    "sandybrown",
+    "seagreen",
+    "seashell",
+    "sienna",
+    "silver",
+    "skyblue",
+    "slateblue",
+    "slategray",
+    "slategrey",
+    "snow",
+    "springgreen",
+    "steelblue",
+    "tan",
+    "teal",
+    "thistle",
+    "tomato",
+    "turquoise",
+    "violet",
+    "wheat",
+    "white",
+    "whitesmoke",
+    "yellow",
+    "yellowgreen"];
+    let mut index = 0;
+    for ch in munjayeol.chars() {
+      if index == 5 {break;}
+        if self.array.get(self.index + index) != Some(&Objects::Char(ch)) {
+          return false;
+        }
+        index +=1;
+    }
+    let mut is_color:bool = false;
+    let mut indexes = Vec::new();
+    for color in colors {
+      let mut is_this_color = true;
+      for ch in color.chars() {
+        if self.array.get(self.index + index) != Some(&Objects::Char(ch)) {
+          is_this_color = false;
+        } else {
+          index += 1;
+        }
+      }
+      if is_this_color {
+        indexes.push(index);
+        is_color = true;
+      }
+      index = 4;
+    }
+    for i in indexes.clone() {
+      if i > index {
+        index = i;
+      }
+    }
+    if !is_color {loop {
+      if let Some(Objects::Char(ch)) =  self.array.get(self.index + index) && is_hex(*ch) {
+        index += 1;
+      }  else {
+        is_color = index == 10 || index== 7;
+        break;
+      }
+    }}
+    if !is_color {
+      return false;
+    }
+    if let  Some(Objects::Char(' ')) =  self.array.get(self.index + index) {
+      return is_color;
+      //3축약, 풀헥스 지원
+    }
+    if let Some(Objects::Char(',')) =  self.array.get(self.index + index) && let Some(Objects::Char('#')) =  self.array.get(self.index + index+1) {
+      index += 2;
+    } else {
+      false;
+    }
+    indexes.clear();
+    is_color = false;
+    let rollbackindex = index;
+    for color in colors {
+      let mut is_this_color = true;
+      for ch in color.chars() {
+        if self.array.get(self.index + index) != Some(&Objects::Char(ch)) {
+          is_this_color = false;
+        } else {
+          index += 1;
+        }
+      }
+      if is_this_color {
+        is_color = true;
+        indexes.push(index);
+      }
+      index = rollbackindex;
+    }
+    for i in indexes {
+      if i > index {
+        index = i;
+      }
+    }
+    if !is_color {
+    loop {
+      if let Some(Objects::Char(ch)) =  self.array.get(self.index + index) && is_hex(*ch) {
+        index += 1;
+      } else {
+        if index == rollbackindex + 3 || index==rollbackindex + 6 {
+          break
+        } else {
+          return false;
+        }
+      }
+    }
+    }
+    if let  Some(Objects::Char(' ')) =  self.array.get(self.index + index) {
+      return index == rollbackindex + 3 || index==rollbackindex + 6;
+      //3축약, 풀헥스 지원
+    }
+    false
   }
 }
 ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
