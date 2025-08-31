@@ -6,17 +6,16 @@ use std::{mem::discriminant, vec};
 
 use crate::{
   renderobjs::{
-    Heading, Languages, Link, LinkType, List, ListLine, NamuTriple, NamumarkMacro, Quote,
-    QuoteLine, RenderObject, Syntax,
+    Color, Heading, Languages, Link, LinkType, List, ListLine, Minus, NamuTriple, NamumarkMacro, Plus, Quote, QuoteLine, RenderObject, Syntax
   },
   structs::{Compiler, Expect, ListType, NamuMacroType, Objects},
 };
 
-pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
+pub (crate) fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
   let mut namumarkresult: Vec<Objects> = Vec::new();
   let mut result: RenderObject = RenderObject::NopNopNop;
   let mut close = close;
-  prepare_result(&close, &mut result);
+  prepare_result(&close, &mut result, compiler);
   while namumarker(compiler, &mut close, &mut namumarkresult, &mut result) {
     if compiler.lastrollbackindex.len() == 61 {
       panic!("문법 깊이 제한에 도달했습니다.")
@@ -24,7 +23,7 @@ pub fn parse_first(compiler: &mut Compiler, close: Expect) -> RenderObject {
   }
   result
 }
-fn prepare_result(close: &Expect, result: &mut RenderObject) {
+fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Compiler) {
   match close {
     Expect::None => *result = RenderObject::NopNopNop,
     Expect::Link => {
@@ -76,9 +75,51 @@ fn prepare_result(close: &Expect, result: &mut RenderObject) {
         folded: false,
         content: Vec::new(),
       })
+    }
+    Expect::Color => {
+      let mut rst = RenderObject::Color(Color {
+        first: String::new(),
+        second: None,
+        content: Vec::new(),
+      });
+      let mut resultt = String::from("#");
+      loop {
+        if let Some(&Objects::Char(ch)) = compiler.get(compiler.index) {
+          if ch.eq(&' ') {
+            if let RenderObject::Color(ref mut cl) = rst {
+              if cl.first.is_empty() {
+                cl.first = resultt.clone();
+              } else {
+                cl.second = Some(resultt.clone());
+              }
+            }
+            break;
+          } else if ch.eq(&',') {
+            if let RenderObject::Color(ref mut cl) = rst {
+              cl.first = resultt.clone();
+              resultt.clear();
+            }
+          } else {
+            resultt.push(ch);
+          }
+          compiler.index += 1;
+        } else {
+          panic!("issue https://github.com/repo2joo/namumark");
+        }
+      }
+      *result = rst;
     },
-    Expect::Color  => {
-      panic!("not covered")
+    Expect::Plus => {
+      *result = RenderObject::Plus(Plus{
+        content:Vec::new(),
+        how:0
+      })
+    },
+    Expect::Minus => {
+      *result = RenderObject::Minus(Minus{
+        content:Vec::new(),
+        how:0
+      })
     }
   }
 }
@@ -166,6 +207,33 @@ fn namumarker(
         compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
         compiler.expected.push(Expect::TripleWithNamuMark);
         thisparsing = Some(parse_first(compiler, Expect::TripleWithNamuMark))
+      } else if compiler.is_color() {
+        compiler.index += 4;
+        compiler.expected.push(Expect::Color);
+        thisparsing = Some(parse_first(compiler, Expect::Color));
+        //todo: 일단 파싱 하게되면 컬러 따고 인덱스 자동으로 올리고
+        //담부턴 관여 X
+        //이것만 하면 1단계 찐완성 아자아자
+      } else if compiler.peak("{{{+") && {
+        if let Objects::Char(ch) = compiler.get(compiler.index + 4).unwrap() {
+          ch.to_string().parse().is_ok_and(|num| matches!(num, 0..=5))
+        } else {
+          false
+        }
+      } {
+        compiler.index += 4;
+        compiler.expected.push(Expect::Plus);
+        thisparsing = Some(parse_first(compiler, Expect::Plus));
+      } else if compiler.peak("{{{+") && {
+        if let Objects::Char(ch) = compiler.get(compiler.index + 4).unwrap() {
+          ch.to_string().parse().is_ok_and(|num| matches!(num, 0..=5))
+        } else {
+          false
+        }
+      } {
+        compiler.index += 4;
+        compiler.expected.push(Expect::Minus);
+        thisparsing = Some(parse_first(compiler, Expect::Minus));
       } else if compiler.peak("{{{") {
         compiler.index += 3;
         compiler.lastrollbackindex.push(compiler.index); //트리플 문들은 첫출은 다 리터럴이던데
@@ -383,163 +451,6 @@ fn namumarker(
           }
         }
         true;
-      } else if compiler.peak("{{{#aliceblue")
-        || compiler.peak("{{{#antiquewhite")
-        || compiler.peak("{{{#aqua")
-        || compiler.peak("{{{#aquamarine")
-        || compiler.peak("{{{#azure")
-        || compiler.peak("{{{#beige")
-        || compiler.peak("{{{#bisque")
-        || compiler.peak("{{{#black")
-        || compiler.peak("{{{#blanchedalmond")
-        || compiler.peak("{{{#blue")
-        || compiler.peak("{{{#blueviolet")
-        || compiler.peak("{{{#brown")
-        || compiler.peak("{{{#burlywood")
-        || compiler.peak("{{{#cadetblue")
-        || compiler.peak("{{{#chartreuse")
-        || compiler.peak("{{{#chocolate")
-        || compiler.peak("{{{#coral")
-        || compiler.peak("{{{#cornflowerblue")
-        || compiler.peak("{{{#cornsilk")
-        || compiler.peak("{{{#crimson")
-        || compiler.peak("{{{#cyan")
-        || compiler.peak("{{{#darkblue")
-        || compiler.peak("{{{#darkcyan")
-        || compiler.peak("{{{#darkgoldenrod")
-        || compiler.peak("{{{#darkgray")
-        || compiler.peak("{{{#darkgrey")
-        || compiler.peak("{{{#darkgreen")
-        || compiler.peak("{{{#darkkhaki")
-        || compiler.peak("{{{#darkmagenta")
-        || compiler.peak("{{{#darkolivegreen")
-        || compiler.peak("{{{#darkorange")
-        || compiler.peak("{{{#darkorchid")
-        || compiler.peak("{{{#darkred")
-        || compiler.peak("{{{#darksalmon")
-        || compiler.peak("{{{#darkseagreen")
-        || compiler.peak("{{{#darkslateblue")
-        || compiler.peak("{{{#darkslategray")
-        || compiler.peak("{{{#darkslategrey")
-        || compiler.peak("{{{#darkturquoise")
-        || compiler.peak("{{{#darkviolet")
-        || compiler.peak("{{{#deeppink")
-        || compiler.peak("{{{#deepskyblue")
-        || compiler.peak("{{{#dimgray")
-        || compiler.peak("{{{#dimgrey")
-        || compiler.peak("{{{#dodgerblue")
-        || compiler.peak("{{{#firebrick")
-        || compiler.peak("{{{#floralwhite")
-        || compiler.peak("{{{#forestgreen")
-        || compiler.peak("{{{#fuchsia")
-        || compiler.peak("{{{#gainsboro")
-        || compiler.peak("{{{#ghostwhite")
-        || compiler.peak("{{{#gold")
-        || compiler.peak("{{{#goldenrod")
-        || compiler.peak("{{{#gray")
-        || compiler.peak("{{{#grey")
-        || compiler.peak("{{{#green")
-        || compiler.peak("{{{#greenyellow")
-        || compiler.peak("{{{#honeydew")
-        || compiler.peak("{{{#hotpink")
-        || compiler.peak("{{{#indianred")
-        || compiler.peak("{{{#indigo")
-        || compiler.peak("{{{#ivory")
-        || compiler.peak("{{{#khaki")
-        || compiler.peak("{{{#lavender")
-        || compiler.peak("{{{#lavenderblush")
-        || compiler.peak("{{{#lawngreen")
-        || compiler.peak("{{{#lemonchiffon")
-        || compiler.peak("{{{#lightblue")
-        || compiler.peak("{{{#lightcoral")
-        || compiler.peak("{{{#lightcyan")
-        || compiler.peak("{{{#lightgoldenrodyellow")
-        || compiler.peak("{{{#lightgray")
-        || compiler.peak("{{{#lightgrey")
-        || compiler.peak("{{{#lightgreen")
-        || compiler.peak("{{{#lightpink")
-        || compiler.peak("{{{#lightsalmon")
-        || compiler.peak("{{{#lightseagreen")
-        || compiler.peak("{{{#lightskyblue")
-        || compiler.peak("{{{#lightslategray")
-        || compiler.peak("{{{#lightslategrey")
-        || compiler.peak("{{{#lightsteelblue")
-        || compiler.peak("{{{#lightyellow")
-        || compiler.peak("{{{#lime")
-        || compiler.peak("{{{#limegreen")
-        || compiler.peak("{{{#linen")
-        || compiler.peak("{{{#magenta")
-        || compiler.peak("{{{#maroon")
-        || compiler.peak("{{{#mediumaquamarine")
-        || compiler.peak("{{{#mediumblue")
-        || compiler.peak("{{{#mediumorchid")
-        || compiler.peak("{{{#mediumpurple")
-        || compiler.peak("{{{#mediumseagreen")
-        || compiler.peak("{{{#mediumslateblue")
-        || compiler.peak("{{{#mediumspringgreen")
-        || compiler.peak("{{{#mediumturquoise")
-        || compiler.peak("{{{#mediumvioletred")
-        || compiler.peak("{{{#midnightblue")
-        || compiler.peak("{{{#mintcream")
-        || compiler.peak("{{{#mistyrose")
-        || compiler.peak("{{{#moccasin")
-        || compiler.peak("{{{#navajowhite")
-        || compiler.peak("{{{#navy")
-        || compiler.peak("{{{#oldlace")
-        || compiler.peak("{{{#olive")
-        || compiler.peak("{{{#olivedrab")
-        || compiler.peak("{{{#orange")
-        || compiler.peak("{{{#orangered")
-        || compiler.peak("{{{#orchid")
-        || compiler.peak("{{{#palegoldenrod")
-        || compiler.peak("{{{#palegreen")
-        || compiler.peak("{{{#paleturquoise")
-        || compiler.peak("{{{#palevioletred")
-        || compiler.peak("{{{#papayawhip")
-        || compiler.peak("{{{#peachpuff")
-        || compiler.peak("{{{#peru")
-        || compiler.peak("{{{#pink")
-        || compiler.peak("{{{#plum")
-        || compiler.peak("{{{#powderblue")
-        || compiler.peak("{{{#purple")
-        || compiler.peak("{{{#rebeccapurple")
-        || compiler.peak("{{{#red")
-        || compiler.peak("{{{#rosybrown")
-        || compiler.peak("{{{#royalblue")
-        || compiler.peak("{{{#saddlebrown")
-        || compiler.peak("{{{#salmon")
-        || compiler.peak("{{{#sandybrown")
-        || compiler.peak("{{{#seagreen")
-        || compiler.peak("{{{#seashell")
-        || compiler.peak("{{{#sienna")
-        || compiler.peak("{{{#silver")
-        || compiler.peak("{{{#skyblue")
-        || compiler.peak("{{{#slateblue")
-        || compiler.peak("{{{#slategray")
-        || compiler.peak("{{{#slategrey")
-        || compiler.peak("{{{#snow")
-        || compiler.peak("{{{#springgreen")
-        || compiler.peak("{{{#steelblue")
-        || compiler.peak("{{{#tan")
-        || compiler.peak("{{{#teal")
-        || compiler.peak("{{{#thistle")
-        || compiler.peak("{{{#tomato")
-        || compiler.peak("{{{#turquoise")
-        || compiler.peak("{{{#violet")
-        || compiler.peak("{{{#wheat")
-        || compiler.peak("{{{#white")
-        || compiler.peak("{{{#whitesmoke")
-        || compiler.peak("{{{#yellow")
-        || compiler.peak("{{{#yellowgreen")
-      { //출처:https://www.w3schools.com/cssref/css_colors.php
-        //여기 있는 html을 대충 정규식 만들어서 컬러만 받아온다음에 rust로 tolowercase해갖고 나온 결과물을 stdout으로 파일에 쓴다음에 또 정규식으로 조건문으로 만들었답니다.
-        //그니까 출처 안적으면 안되지 않을까
-        compiler.index += 4;
-        compiler.expected.push(Expect::Color);
-        thisparsing = Some(parse_first(compiler, Expect::Color));
-        //todo: 일단 파싱 하게되면 컬러 따고 인덱스 자동으로 올리고
-        //담부턴 관여 X
-        //이것만 하면 1단계 찐완성 아자아자
       } else if let (true, how) = compiler.peak_repeat_line(' ', Some("1.")) {
         compiler.index += how + 2;
         compiler.expected.push(Expect::List(0));
@@ -702,6 +613,30 @@ fn namumarker(
                   }
                   return false;
                 }
+                Expect::Color => {
+                  if let RenderObject::Color(cl) = result {
+                    cl.content.extend(tuple.1.to_vec());
+                    return false;
+                  } else {
+                    panic!()
+                  }
+                },
+                Expect::Plus => {
+                  if let RenderObject::Plus(pl) = result {
+                    pl.content.extend(tuple.1.to_vec());
+                    return false;
+                  } else {
+                    panic!()
+                  }
+                },
+                Expect::Minus => {
+                  if let RenderObject::Minus(mx) = result {
+                    mx.content.extend(tuple.1.to_vec());
+                    return false;
+                  } else {
+                    panic!()
+                  }
+                },
                 Expect::TripleWithNamuMark3 => {
                   if let RenderObject::NamuTriple(nt) = result {
                     namumarkresult.extend(tuple.1);
@@ -798,7 +733,6 @@ fn namumarker(
                 panic!()
               }
             } else {
-              //NopNopNop이 이러라고 만든 베리언트는 아닌걸로 알고 있는데
               namumarkresult.push(Objects::RenderObject(obj));
             }
             true
@@ -932,6 +866,40 @@ fn a_whole_my_vec(
       };
       return resultt;
     }
+    Expect::Color => {
+      let mut resultt = slices("{{{#".to_string());
+      if let RenderObject::Color(cl) = result {
+        resultt.extend_from_slice(&slices(cl.first.clone()));
+        resultt.push(Objects::Char(','));
+        resultt.extend_from_slice(&slices(cl.second.clone().unwrap()));
+        resultt.push(Objects::Char(' '));
+      } else {
+        panic!();
+      };
+      return resultt;
+    },
+    Expect::Plus => {
+      let mut resultt = slices("{{{+".to_string());
+      if let RenderObject::Plus(pl) = result {
+        resultt.extend_from_slice(&slices(pl.how.to_string()));
+        resultt.push(Objects::Char(' '));
+        resultt.extend_from_slice(&pl.content);
+      } else {
+        panic!();
+      };
+      return resultt;
+    },
+    Expect::Minus => {
+      let mut resultt = slices("{{{-".to_string());
+      if let RenderObject::Minus(mx) = result {
+        resultt.extend_from_slice(&slices(mx.how.to_string()));
+        resultt.push(Objects::Char(' '));
+        resultt.extend_from_slice(&mx.content);
+      } else {
+        panic!();
+      };
+      return resultt;
+    },
     Expect::TripleWithNamuMark3 => {
       let mut resultt = slices("{{{#!".to_string());
       if let RenderObject::NamuTriple(nt) = result {
@@ -988,7 +956,7 @@ fn a_whole_my_vec(
     }
   }
 }
-pub fn slices(s: String) -> Vec<Objects> {
+pub (crate) fn slices(s: String) -> Vec<Objects> {
   let mut result: Vec<Objects> = Vec::new();
   for i in s.chars() {
     result.push(Objects::Char(i));
@@ -1267,33 +1235,72 @@ fn parsing_close(
           panic!();
         }
       }
-    } else if compiler.expected.contains(&Expect::JustTriple) {
+    } else if *close == Expect::Color {
+      if let RenderObject::Color(cl) = result {
+        cl.content = namumarkresult.to_vec();
+        compiler.index += 3;
+        compiler.expected.pop();
+        return Some(false);
+      }
+    } else if *close == Expect::Plus {
+      if let RenderObject::Plus(pl) = result {
+        if let Some(Objects::Char(ch)) = namumarkresult.first() {
+          pl.how = ch.to_string().parse().unwrap();
+          namumarkresult.remove(0);
+          namumarkresult.remove(0);
+        } else {
+          panic!();
+        }
+        pl.content = namumarkresult.to_vec();
+        compiler.index += 3;
+        compiler.expected.pop();
+        return Some(false);
+      }
+    } else if *close == Expect::Minus {
+      if let RenderObject::Minus(pl) = result {
+        if let Some(Objects::Char(ch)) = namumarkresult.first() {
+          pl.how = ch.to_string().parse().unwrap();
+          namumarkresult.remove(0);
+          namumarkresult.remove(0);
+        } else {
+          panic!();
+        }
+        pl.content = namumarkresult.to_vec();
+        compiler.index += 3;
+        compiler.expected.pop();
+        return Some(false);
+      }
+    }
+    let find = compiler.expected.iter().find(|exp| if exp == &&Expect::Color || exp == &&Expect::JustTriple || exp == &&Expect::TripleWithNamuMark || exp == &&Expect::SyntaxTriple || exp == &&Expect::Plus || exp == &&Expect::Minus {
+      true
+    } else {false} );
+    if find.is_some() && find.unwrap().eq(&Expect::Color) {
+      *result = RenderObject::EarlyParse((Expect::Color, namumarkresult.to_vec()));
+      compiler.index += 3;
+      return Some(false);
+    } else if find.is_some() && find.unwrap().eq(&Expect::Plus) {
+      *result = RenderObject::EarlyParse((Expect::Plus, namumarkresult.to_vec()))
+    } else if find.is_some() && find.unwrap().eq(&Expect::Minus) {
+      *result = RenderObject::EarlyParse((Expect::Minus, namumarkresult.to_vec()))
+    } else if find.is_some() && find.unwrap().eq(&Expect::JustTriple) {
       *result = RenderObject::EarlyParse((Expect::JustTriple, namumarkresult.to_vec()));
       compiler.index += 3;
       return Some(false);
-    } else if compiler.expected.contains(&Expect::TripleWithNamuMark) {
+    } else if find.is_some() && find.unwrap().eq(&Expect::TripleWithNamuMark) {
       *result = RenderObject::EarlyParse((
         Expect::TripleWithNamuMark3,
         a_whole_my_vec(result, namumarkresult, close),
       ));
       compiler.index += 3;
       return Some(false);
-    } else if compiler.expected.contains(&Expect::SyntaxTriple) {
+    } else if find.is_some() && find.unwrap().eq(&Expect::SyntaxTriple) {
       *result = RenderObject::EarlyParse((Expect::SyntaxTriple, namumarkresult.to_vec()));
       compiler.index += 3;
       return Some(false);
-    } else if compiler.expected.contains(&Expect::TripleWithNamuMark)
-      || compiler.expected.contains(&Expect::TripleWithNamuMark)
-    {
-      //리터럴 처리용
-      *result = RenderObject::EarlyParse((Expect::TripleWithNamuMark, namumarkresult.to_vec()));
-      compiler.index += 3;
-      return Some(false);
-    } else {
+    }
       namumarkresult.extend(slices("}}}".to_string()));
       compiler.index += 3;
       return Some(true);
-    }
   }
   return None;
 }

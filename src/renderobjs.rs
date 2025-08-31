@@ -20,9 +20,28 @@ pub enum RenderObject {
   Quote(Quote),
   QuoteLine(QuoteLine),
   Heading(Heading),
+  Color(Color),
+  Plus(Plus),
+  Minus(Minus),
 }
 #[derive(Debug, PartialEq, Clone)]
-pub struct Heading {
+pub struct Plus {
+  pub (crate) how:u8,
+  pub (crate) content:Vec<Objects>
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct Minus{
+  pub (crate)how:u8,
+  pub (crate) content:Vec<Objects>,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub  struct Color {
+  pub  first: String,
+  pub  second: Option<String>,
+  pub  content: Vec<Objects>,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub  struct Heading {
   ///=의 개수
   pub lvl: usize,
   ///접힘 여부

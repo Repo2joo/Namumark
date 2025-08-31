@@ -2,13 +2,13 @@ use std::vec;
 
 use crate::{parser::parse_first, renderobjs::RenderObject};
 #[derive(Debug)]
-///사실 여기 있는거중에 fixed_comments랑 redirect정도만 public으로 하면 되었습니다.
+///사실 여기 있는거중에 fixed_comments랑 redirect정도만 pub (crate)lic으로 하면 되었습니다.
 ///그니까 그거 두 개만 알아두시면 됩니다.
 pub struct Compiler {
-  pub index: usize,
-  pub array: Vec<Objects>,
-  pub expected: Vec<Expect>,
-  pub lastrollbackindex: Vec<usize>,
+  pub (crate) index: usize,
+  pub  array: Vec<Objects>,
+  pub (crate) expected: Vec<Expect>,
+  pub (crate) lastrollbackindex: Vec<usize>,
   ///고정주석이 있으면 벡터에 추가됩니다. is_empty로 확인하시는 것을 추천드립니다.
   pub fixed_comments: Vec<String>,
   ///리다이렉트가 있으면 어디로 가야하는지 문자열이 저장됩니다. 리다이렉트랑 고정주석 두 개 다 있다면 리다이렉트를 우선적으로 처리하시는 것을 추천드립니다.
@@ -23,7 +23,7 @@ pub enum Objects {
 }
 #[derive(Debug, PartialEq, Clone)]
 ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-pub enum Expect {
+pub (crate) enum Expect {
   None,
   Link,
   Link2,
@@ -37,9 +37,11 @@ pub enum Expect {
   Quote(usize),
   Heading(usize),
   Color,
+  Plus,
+  Minus,
 }
 #[derive(Debug, PartialEq, Clone)]
-/// *, 1., I, 등등의 리스트의 타입을 나타내는 enum입니다. 힌글은 원작에서 지원하는지 기억이 안나서 그냥 넣었습니다.
+/// *, 1., I, 등등의 리스트의 타입을 나타내는 enum입니다. 한글은 원작에서 지원하는지 기억이 안나서 그냥 넣었습니다.
 pub enum ListType {
   ///가. 나. 다. ...
   Hangul,
@@ -70,9 +72,9 @@ pub enum NamuMacroType {
   PageCount,
   Ruby,
 }
-impl NamuMacroType {
+impl ToString for NamuMacroType {
   ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub fn to_string(&self) -> String {
+  fn to_string(&self) -> String {
     match self {
       NamuMacroType::YouTube => String::from("youtube"),
       NamuMacroType::KakaoTV => String::from("kakaotv"),
@@ -109,15 +111,15 @@ impl Compiler {
     self.fixed_comments.pop();
   }
   ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub fn get(&mut self, idx: usize) -> Option<&Objects> {
+  pub (crate) fn get(&mut self, idx: usize) -> Option<&Objects> {
     self.array.get(idx)
   }
   ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub fn current(&self) -> Option<Objects> {
+  pub (crate) fn current(&self) -> Option<Objects> {
     self.array.get(self.index).cloned()
   }
   ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub fn peak(&mut self, str: &str) -> bool {
+  pub (crate) fn peak(&mut self, str: &str) -> bool {
     let mut idx = 0;
     for ch in str.chars() {
       if let Some(Objects::Char(cha)) = self.get(self.index + idx) {
@@ -132,7 +134,7 @@ impl Compiler {
     return true;
   }
   ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub fn peak_line(&mut self, str: &str) -> bool {
+  pub (crate) fn peak_line(&mut self, str: &str) -> bool {
     let mut idx = 0;
     if self.index == 0 || self.get(self.index - 1) == Some(&Objects::Char('\n')) {
       idx += 1;
@@ -152,7 +154,7 @@ impl Compiler {
     return true;
   }
   ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub fn peak_repeat_line(&mut self, ch: char, end: Option<&str>) -> (bool, usize) {
+  pub (crate) fn peak_repeat_line(&mut self, ch: char, end: Option<&str>) -> (bool, usize) {
     if self.index == 0 || self.get(self.index - 1) == Some(&Objects::Char('\n')) {
       let mut idx = 0;
       loop {
@@ -177,183 +179,169 @@ impl Compiler {
       (false, 0)
     }
   }
-  pub fn is_color (&self) -> bool {
-    fn is_hex(ch:char) -> bool {
-      ch.to_ascii_lowercase() == '0'
-      ||ch.to_ascii_lowercase() == '1'
-      ||ch.to_ascii_lowercase() == '2'
-      ||ch.to_ascii_lowercase() == '3'
-      ||ch.to_ascii_lowercase() == '4'
-      ||ch.to_ascii_lowercase() == '5'
-      ||ch.to_ascii_lowercase() == '6'
-      ||ch.to_ascii_lowercase() == '7'
-      ||ch.to_ascii_lowercase() == '8'
-      ||ch.to_ascii_lowercase() == '9'
-      ||ch.to_ascii_lowercase() == 'a'
-      ||ch.to_ascii_lowercase() == 'b'
-      ||ch.to_ascii_lowercase() == 'c'
-      ||ch.to_ascii_lowercase() == 'd'
-      ||ch.to_ascii_lowercase() == 'e'
-      ||ch.to_ascii_lowercase() == 'f'
-    }
+  pub (crate) fn is_color(&self) -> bool {
     let munjayeol = "{{{#";
-    let colors:[&str; 148] = ["aliceblue",
-    "antiquewhite",
-    "aqua",
-    "aquamarine",
-    "azure",
-    "beige",
-    "bisque",
-    "black",
-    "blanchedalmond",
-    "blue",
-    "blueviolet",
-    "brown",
-    "burlywood",
-    "cadetblue",
-    "chartreuse",
-    "chocolate",
-    "coral",
-    "cornflowerblue",
-    "cornsilk",
-    "crimson",
-    "cyan",
-    "darkblue",
-    "darkcyan",
-    "darkgoldenrod",
-    "darkgray",
-    "darkgrey",
-    "darkgreen",
-    "darkkhaki",
-    "darkmagenta",
-    "darkolivegreen",
-    "darkorange",
-    "darkorchid",
-    "darkred",
-    "darksalmon",
-    "darkseagreen",
-    "darkslateblue",
-    "darkslategray",
-    "darkslategrey",
-    "darkturquoise",
-    "darkviolet",
-    "deeppink",
-    "deepskyblue",
-    "dimgray",
-    "dimgrey",
-    "dodgerblue",
-    "firebrick",
-    "floralwhite",
-    "forestgreen",
-    "fuchsia",
-    "gainsboro",
-    "ghostwhite",
-    "gold",
-    "goldenrod",
-    "gray",
-    "grey",
-    "green",
-    "greenyellow",
-    "honeydew",
-    "hotpink",
-    "indianred",
-    "indigo",
-    "ivory",
-    "khaki",
-    "lavender",
-    "lavenderblush",
-    "lawngreen",
-    "lemonchiffon",
-    "lightblue",
-    "lightcoral",
-    "lightcyan",
-    "lightgoldenrodyellow",
-    "lightgray",
-    "lightgrey",
-    "lightgreen",
-    "lightpink",
-    "lightsalmon",
-    "lightseagreen",
-    "lightskyblue",
-    "lightslategray",
-    "lightslategrey",
-    "lightsteelblue",
-    "lightyellow",
-    "lime",
-    "limegreen",
-    "linen",
-    "magenta",
-    "maroon",
-    "mediumaquamarine",
-    "mediumblue",
-    "mediumorchid",
-    "mediumpurple",
-    "mediumseagreen",
-    "mediumslateblue",
-    "mediumspringgreen",
-    "mediumturquoise",
-    "mediumvioletred",
-    "midnightblue",
-    "mintcream",
-    "mistyrose",
-    "moccasin",
-    "navajowhite",
-    "navy",
-    "oldlace",
-    "olive",
-    "olivedrab",
-    "orange",
-    "orangered",
-    "orchid",
-    "palegoldenrod",
-    "palegreen",
-    "paleturquoise",
-    "palevioletred",
-    "papayawhip",
-    "peachpuff",
-    "peru",
-    "pink",
-    "plum",
-    "powderblue",
-    "purple",
-    "rebeccapurple",
-    "red",
-    "rosybrown",
-    "royalblue",
-    "saddlebrown",
-    "salmon",
-    "sandybrown",
-    "seagreen",
-    "seashell",
-    "sienna",
-    "silver",
-    "skyblue",
-    "slateblue",
-    "slategray",
-    "slategrey",
-    "snow",
-    "springgreen",
-    "steelblue",
-    "tan",
-    "teal",
-    "thistle",
-    "tomato",
-    "turquoise",
-    "violet",
-    "wheat",
-    "white",
-    "whitesmoke",
-    "yellow",
-    "yellowgreen"];
+    let colors: [&str; 148] = [
+      "aliceblue",
+      "antiquewhite",
+      "aqua",
+      "aquamarine",
+      "azure",
+      "beige",
+      "bisque",
+      "black",
+      "blanchedalmond",
+      "blue",
+      "blueviolet",
+      "brown",
+      "burlywood",
+      "cadetblue",
+      "chartreuse",
+      "chocolate",
+      "coral",
+      "cornflowerblue",
+      "cornsilk",
+      "crimson",
+      "cyan",
+      "darkblue",
+      "darkcyan",
+      "darkgoldenrod",
+      "darkgray",
+      "darkgrey",
+      "darkgreen",
+      "darkkhaki",
+      "darkmagenta",
+      "darkolivegreen",
+      "darkorange",
+      "darkorchid",
+      "darkred",
+      "darksalmon",
+      "darkseagreen",
+      "darkslateblue",
+      "darkslategray",
+      "darkslategrey",
+      "darkturquoise",
+      "darkviolet",
+      "deeppink",
+      "deepskyblue",
+      "dimgray",
+      "dimgrey",
+      "dodgerblue",
+      "firebrick",
+      "floralwhite",
+      "forestgreen",
+      "fuchsia",
+      "gainsboro",
+      "ghostwhite",
+      "gold",
+      "goldenrod",
+      "gray",
+      "grey",
+      "green",
+      "greenyellow",
+      "honeydew",
+      "hotpink",
+      "indianred",
+      "indigo",
+      "ivory",
+      "khaki",
+      "lavender",
+      "lavenderblush",
+      "lawngreen",
+      "lemonchiffon",
+      "lightblue",
+      "lightcoral",
+      "lightcyan",
+      "lightgoldenrodyellow",
+      "lightgray",
+      "lightgrey",
+      "lightgreen",
+      "lightpink",
+      "lightsalmon",
+      "lightseagreen",
+      "lightskyblue",
+      "lightslategray",
+      "lightslategrey",
+      "lightsteelblue",
+      "lightyellow",
+      "lime",
+      "limegreen",
+      "linen",
+      "magenta",
+      "maroon",
+      "mediumaquamarine",
+      "mediumblue",
+      "mediumorchid",
+      "mediumpurple",
+      "mediumseagreen",
+      "mediumslateblue",
+      "mediumspringgreen",
+      "mediumturquoise",
+      "mediumvioletred",
+      "midnightblue",
+      "mintcream",
+      "mistyrose",
+      "moccasin",
+      "navajowhite",
+      "navy",
+      "oldlace",
+      "olive",
+      "olivedrab",
+      "orange",
+      "orangered",
+      "orchid",
+      "palegoldenrod",
+      "palegreen",
+      "paleturquoise",
+      "palevioletred",
+      "papayawhip",
+      "peachpuff",
+      "peru",
+      "pink",
+      "plum",
+      "powderblue",
+      "purple",
+      "rebeccapurple",
+      "red",
+      "rosybrown",
+      "royalblue",
+      "saddlebrown",
+      "salmon",
+      "sandybrown",
+      "seagreen",
+      "seashell",
+      "sienna",
+      "silver",
+      "skyblue",
+      "slateblue",
+      "slategray",
+      "slategrey",
+      "snow",
+      "springgreen",
+      "steelblue",
+      "tan",
+      "teal",
+      "thistle",
+      "tomato",
+      "turquoise",
+      "violet",
+      "wheat",
+      "white",
+      "whitesmoke",
+      "yellow",
+      "yellowgreen",
+    ];
     let mut index = 0;
     for ch in munjayeol.chars() {
-      if index == 5 {break;}
-        if self.array.get(self.index + index) != Some(&Objects::Char(ch)) {
-          return false;
-        }
-        index +=1;
+      if index == 5 {
+        break;
+      }
+      if self.array.get(self.index + index) != Some(&Objects::Char(ch)) {
+        return false;
+      }
+      index += 1;
     }
-    let mut is_color:bool = false;
+    let mut is_color: bool = false;
     let mut indexes = Vec::new();
     for color in colors {
       let mut is_this_color = true;
@@ -375,22 +363,28 @@ impl Compiler {
         index = i;
       }
     }
-    if !is_color {loop {
-      if let Some(Objects::Char(ch)) =  self.array.get(self.index + index) && is_hex(*ch) {
-        index += 1;
-      }  else {
-        is_color = index == 10 || index== 7;
-        break;
+    if !is_color {
+      loop {
+        if let Some(Objects::Char(ch)) = self.array.get(self.index + index)
+          && ch.is_ascii_hexdigit()
+        {
+          index += 1;
+        } else {
+          is_color = index == 10 || index == 7;
+          break;
+        }
       }
-    }}
+    }
     if !is_color {
       return false;
     }
-    if let  Some(Objects::Char(' ')) =  self.array.get(self.index + index) {
+    if let Some(Objects::Char(' ')) = self.array.get(self.index + index) {
       return is_color;
       //3축약, 풀헥스 지원
     }
-    if let Some(Objects::Char(',')) =  self.array.get(self.index + index) && let Some(Objects::Char('#')) =  self.array.get(self.index + index+1) {
+    if let Some(Objects::Char(',')) = self.array.get(self.index + index)
+      && let Some(Objects::Char('#')) = self.array.get(self.index + index + 1)
+    {
       index += 2;
     } else {
       false;
@@ -419,20 +413,22 @@ impl Compiler {
       }
     }
     if !is_color {
-    loop {
-      if let Some(Objects::Char(ch)) =  self.array.get(self.index + index) && is_hex(*ch) {
-        index += 1;
-      } else {
-        if index == rollbackindex + 3 || index==rollbackindex + 6 {
-          break
+      loop {
+        if let Some(Objects::Char(ch)) = self.array.get(self.index + index)
+          && ch.is_ascii_hexdigit()
+        {
+          index += 1;
         } else {
-          return false;
+          if index == rollbackindex + 3 || index == rollbackindex + 6 {
+            break;
+          } else {
+            return false;
+          }
         }
       }
     }
-    }
-    if let  Some(Objects::Char(' ')) =  self.array.get(self.index + index) {
-      return index == rollbackindex + 3 || index==rollbackindex + 6;
+    if let Some(Objects::Char(' ')) = self.array.get(self.index + index) {
+      return index == rollbackindex + 3 || index == rollbackindex + 6;
       //3축약, 풀헥스 지원
     }
     false

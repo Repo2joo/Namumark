@@ -18,8 +18,8 @@ use std::time::Instant;
 
 use structs::Compiler;
 
-mod renderobjs;
-mod structs;
+pub mod renderobjs;
+pub mod structs;
 #[cfg(test)]
 mod tests;
 
@@ -32,21 +32,9 @@ mod parser; //아 이거 복잡하다
 //그 impl들은 이 크레이트에서 직접 구현된 적이 없습니다.
 //그냥 Implmentations는 참고 하여도 좋습니다. 모든 일반 impl들은 믿을 수 있는 사람(?)이 구현한것입니다.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 fn main() {
-  let teststr = "linear-gradient 있었으면 개발 접었을뻔";
+  let teststr = "{{{+1 asdf}}}";
   let mut compiler = Compiler::from(teststr.to_owned());
-  println!("{}",  compiler.is_color())
+  compiler.parse();
+  println!("{:#?}", compiler.array)
 }
