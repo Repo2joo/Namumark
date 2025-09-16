@@ -23,6 +23,11 @@ pub enum RenderObject {
   Color(Color),
   Plus(Plus),
   Minus(Minus),
+  Reference(Reference),
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct Reference {
+  pub (crate) name:String,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct Plus {

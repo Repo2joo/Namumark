@@ -1,6 +1,6 @@
 use std::vec;
 
-use crate::{parser::parse_first, renderobjs::RenderObject};
+use crate::{parser_first::parse_first, renderobjs::RenderObject};
 #[derive(Debug)]
 ///사실 여기 있는거중에 fixed_comments랑 redirect정도만 pub (crate)lic으로 하면 되었습니다.
 ///그니까 그거 두 개만 알아두시면 됩니다.

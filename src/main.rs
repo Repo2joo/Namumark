@@ -23,7 +23,8 @@ pub mod structs;
 #[cfg(test)]
 mod tests;
 
-mod parser; //아 이거 복잡하다
+mod parser_first; //아 이거 복잡하다
+mod parser_second;
 
 //이렇게 문서화 하면 나폴리탄 괴담같음...
 
