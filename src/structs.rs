@@ -1,65 +1,75 @@
 use std::vec;
 
-use crate::{parser_first::parse_first, renderobjs::RenderObject};
+use crate::{parse_third::parse_third, parser_first::parse_first, renderobjs::RenderObject};
 #[derive(Debug)]
-///사실 여기 있는거중에 fixed_comments랑 redirect정도만 pub (crate)lic으로 하면 되었습니다.
-///그니까 그거 두 개만 알아두시면 됩니다.
+///Compiler struct. Can be obtained using [Compiler::from]
 pub struct Compiler {
-  pub (crate) index: usize,
-  pub  array: Vec<Objects>,
-  pub (crate) expected: Vec<Expect>,
-  pub (crate) lastrollbackindex: Vec<usize>,
-  ///고정주석이 있으면 벡터에 추가됩니다. is_empty로 확인하시는 것을 추천드립니다.
+  pub(crate) index: usize,
+  ///The array that result goes
+  pub array: Vec<Objects>,
+  pub(crate) expected: Vec<(Expect, usize, bool)>,
+  ///Fixed comments. Doesn't parsed
   pub fixed_comments: Vec<String>,
-  ///리다이렉트가 있으면 어디로 가야하는지 문자열이 저장됩니다. 리다이렉트랑 고정주석 두 개 다 있다면 리다이렉트를 우선적으로 처리하시는 것을 추천드립니다.
+  ///Redirect
   pub redirect: Option<String>,
+  pub(crate) rollbacks: Option<usize>,
+  pub(crate) custom_macro: Vec<CustomMacro>,
+}
+#[derive(Debug, Clone)]
+pub struct CustomMacro {
+  ///the name of macro
+  name: String,
+  ///weather the macro have argument
+  ///# example
+  ///\[각주\] has no argument.<br />
+  ///\[include(argument)\] has argument
+  arg: bool,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum Objects {
-  ///말그대로 문자열 하나입니다. 유니코드든 아스키든 하나가 char 하나로 취급되는것로 알고있습니다.
+  ///Char
   Char(char),
-  ///해더, 메크로, 삼단중괄호 문법 등등을 하나의 변종으로 묶었습니다. {{{}}}안에 있는 문자열은 여기에 들어갑니다. <code></code>안에 넣어야 하기 때문입니다.
+  ///see [RenderObject]
   RenderObject(RenderObject),
 }
 #[derive(Debug, PartialEq, Clone)]
-///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-pub (crate) enum Expect {
+///No need to see.
+pub enum Expect {
   None,
   Link,
-  Link2,
   SyntaxTriple,
   TripleWithNamuMark,
-  TripleWithNamuMark2,
-  TripleWithNamuMark3,
   JustTriple,
-  NamuMacro(NamuMacroType),
+  NamuMacro,
   List(usize),
   Quote(usize),
   Heading(usize),
   Color,
   Plus,
   Minus,
+  Reference,
+  Bold,
+  Itelic,
+  DelTidal,
+  DelBar,
+  UnderLine,
+  Upper,
+  Lower
 }
 #[derive(Debug, PartialEq, Clone)]
-/// *, 1., I, 등등의 리스트의 타입을 나타내는 enum입니다. 한글은 원작에서 지원하는지 기억이 안나서 그냥 넣었습니다.
+/// The type variant of [crate::renderobjs::List]
 pub enum ListType {
-  ///가. 나. 다. ...
   Hangul,
-  ///a. b. c. ...
   AlphaSmall,
-  ///A. B. C. ...
   AlphaBig,
-  ///I. II. III. ...
   RomanBig,
-  ///i. ii. iii. ...
   RomanSmall,
-  ///번호가 없는 리스트 문법입니다
+  ///the star(*) list
   List,
-  ///1. 2. 3. ...
   Arabia,
 }
 #[derive(Debug, PartialEq, Clone)]
-///메크로의 타잎을 정의해두었습니다. 아마 이름만 봐도 알만할것입니다.
+///the type variant of [crate::renderobjs::NamumarkMacro]
 pub enum NamuMacroType {
   YouTube,
   KakaoTV,
@@ -71,55 +81,75 @@ pub enum NamuMacroType {
   DDay,
   PageCount,
   Ruby,
-}
-impl ToString for NamuMacroType {
-  ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  fn to_string(&self) -> String {
-    match self {
-      NamuMacroType::YouTube => String::from("youtube"),
-      NamuMacroType::KakaoTV => String::from("kakaotv"),
-      NamuMacroType::NicoVideo => String::from("nicovideo"),
-      NamuMacroType::Vimeo => String::from("vimeo"),
-      NamuMacroType::NaverTV => String::from("navertv"),
-      NamuMacroType::Include => String::from("include"),
-      NamuMacroType::Age => String::from("age"),
-      NamuMacroType::DDay => String::from("dday"),
-      NamuMacroType::PageCount => String::from("pagecount"),
-      NamuMacroType::Ruby => String::from("ruby"),
-    }
-  }
+  Date,
+  TableOfContents,
+  Reference,
+  Br,
+  Clearfix,
+  ///the custom macro
+  Custom,
 }
 impl Compiler {
-  ///파싱 객체를 반환합니다. From trait을 만족시키기 귀찮습니다. 문자열을 넣으면 됩니다.
+  pub(crate) fn get_before_earlyparse(&self, vec: Vec<Objects>) -> RenderObject {
+    return RenderObject::AddBefore(vec);
+  }
+  pub(crate) fn peak_macro(&mut self) -> Option<String> {
+    for i in self.custom_macro.to_vec() {
+      if i.arg {
+        continue;
+      };
+      if self.peak(format!("[{}]", i.name).as_str()) {
+        self.index += i.name.len() + 2;
+        return Some(i.name);
+      }
+    }
+    return None;
+  }
+  pub(crate) fn peak_macro_arg(&self) -> bool {
+    for i in self.custom_macro.clone() {
+      if !i.arg {
+        continue;
+      };
+      if self.peak(format!("[{}(", i.name).as_str()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  ///return Compiler from string
   pub fn from(string: String) -> Compiler {
     let mut compiler = Compiler {
       index: 0,
       array: Vec::new(),
       expected: Vec::new(),
-      lastrollbackindex: Vec::new(),
       fixed_comments: vec![String::new()],
       redirect: None,
+      rollbacks: None,
+      custom_macro: Vec::new(),
     };
     for char in string.chars() {
       compiler.array.push(Objects::Char(char));
     }
     return compiler;
   }
-  ///compiler::from("asf").parse() 이런식으로 호출해주시면 됩니다.
+  ///parse the string
   pub fn parse(&mut self) {
     parse_first(self, Expect::None);
+    self.index = 0;
+    self.expected.clear();
+    parse_third(self, Expect::None);
     self.fixed_comments.pop();
   }
-  ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub (crate) fn get(&mut self, idx: usize) -> Option<&Objects> {
+  pub fn add_custom_macros(&mut self, macros: Vec<CustomMacro>) {
+    self.custom_macro.extend(macros);
+  }
+  pub(crate) fn get(&self, idx: usize) -> Option<&Objects> {
     self.array.get(idx)
   }
-  ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub (crate) fn current(&self) -> Option<Objects> {
+  pub(crate) fn current(&self) -> Option<Objects> {
     self.array.get(self.index).cloned()
   }
-  ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub (crate) fn peak(&mut self, str: &str) -> bool {
+  pub(crate) fn peak(&self, str: &str) -> bool {
     let mut idx = 0;
     for ch in str.chars() {
       if let Some(Objects::Char(cha)) = self.get(self.index + idx) {
@@ -133,8 +163,7 @@ impl Compiler {
     }
     return true;
   }
-  ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub (crate) fn peak_line(&mut self, str: &str) -> bool {
+  pub(crate) fn peak_line(&mut self, str: &str) -> bool {
     let mut idx = 0;
     if self.index == 0 || self.get(self.index - 1) == Some(&Objects::Char('\n')) {
       idx += 1;
@@ -153,8 +182,30 @@ impl Compiler {
     }
     return true;
   }
-  ///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-  pub (crate) fn peak_repeat_line(&mut self, ch: char, end: Option<&str>) -> (bool, usize) {
+  pub(crate) fn contains_for_parsing(
+    &self,
+    closure: impl Fn(&Expect) -> bool,
+  ) -> (bool, bool, usize) {
+    let a = self.contains_for_parsing_more(closure);
+    (a.0, a.1, a.2)
+  }
+  pub(crate) fn contains_for_parsing_more(
+    &self,
+    closure: impl Fn(&Expect) -> bool,
+  ) -> (bool, bool, usize, Expect) {
+    let mut has_to_rollback = false;
+    let index = 0..self.expected.len();
+    for i in index {
+      let item = self.expected.get(i).unwrap();
+      if closure(&item.0) {
+        return (true, has_to_rollback, i + 1, item.0.clone());
+      } else if item.2 {
+        has_to_rollback = true;
+      }
+    }
+    (false, has_to_rollback, 0, Expect::None)
+  }
+  pub(crate) fn peak_repeat_line(&mut self, ch: char, end: Option<&str>) -> (bool, usize) {
     if self.index == 0 || self.get(self.index - 1) == Some(&Objects::Char('\n')) {
       let mut idx = 0;
       loop {
@@ -179,7 +230,7 @@ impl Compiler {
       (false, 0)
     }
   }
-  pub (crate) fn is_color(&self) -> bool {
+  pub(crate) fn is_color(&self) -> bool {
     let munjayeol = "{{{#";
     let colors: [&str; 148] = [
       "aliceblue",
@@ -434,8 +485,6 @@ impl Compiler {
     false
   }
 }
-///파싱 과정중에 쓰이는 것으로 신경은 안쓰셔도 됩니다.
-///이런거가 함수가 나눠진다는게 너무 한십해서 그랬습니다
 fn 에휴_진짜_왜그럼(sliceee: &[Objects]) -> String {
   let mut result = String::new();
   for obj in sliceee {

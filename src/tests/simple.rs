@@ -2,9 +2,9 @@
 //복잡한 파서 구조상 로직이 시도때도 없이 바뀌는데 그걸 하나하나 테스트 하기는 어렵기 때문.
 //테스트에서 오차가 일어나면 바로 바꾸기 위해서
 use crate::{
-  parser::slices,
+  parser_first::slices,
   renderobjs::{Link, LinkType, NamuTriple, RenderObject},
-  structs::{Compiler, Objects},
+  structs::{Compiler, NamuMacroType, Objects},
 };
 #[test]
 fn 링크() {
@@ -204,4 +204,30 @@ fn 트리플_미완성_개행있이() {
   compiler.parse();
   let vect = slices("{{{#!wiki attr}}}\n".to_owned());
   assert_eq!(compiler.array, vect)
+}
+#[test]
+fn 롤백_필요한_조기파싱() {
+  let mut compiler = Compiler::from(String::from(
+    "{{{#!wiki attr
+[[안녕하[Include(슈)]}}}",
+  ));
+  compiler.parse();
+  let mut vect = slices("[[안녕하".to_string());
+  vect.push(Objects::RenderObject(RenderObject::NamumarkMacro(
+    crate::renderobjs::NamumarkMacro {
+      macroname: "Include".to_string(),
+      macroarg: Some("슈".to_string()),
+      macrotype: NamuMacroType::Include,
+    },
+  )));
+  assert_eq!(
+    compiler.array,
+    vec![Objects::RenderObject(RenderObject::NamuTriple(
+      NamuTriple {
+        attr: Some("attr".to_string()),
+        content: Some(vect),
+        triplename: "wiki".to_string()
+      }
+    ))]
+  )
 }
