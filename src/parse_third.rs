@@ -8,7 +8,7 @@ pub fn parse_third(compiler: &mut Compiler, close: Expect) -> RenderObject {
   prepare_result(&mut result, &close);
   let mut namumarkresult: Vec<Objects> = Vec::new();
   while namumarker(compiler, &close, &mut result, &mut namumarkresult) {}
-  return result;
+  result
 }
 fn prepare_result(result: &mut RenderObject, close: &Expect) {
   match close {
@@ -160,23 +160,23 @@ fn namumarker(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject
             return true;
           }
         }
-        return false;
+        false
       } else {
-        return true;
+        true
       }
     },
     Some(Objects::RenderObject(rdobj)) => {
       compiler.index += 1;
       namumarkresult.push(Objects::RenderObject(rdobj));
-      return true;
+      true
     }
     None => {
       if compiler.expected.is_empty() {
         compiler.array = namumarkresult.to_vec();
-        return false;
+        false
       } else {
         *result = RenderObject::Nop(namumarkresult.to_vec());
-        return false;
+        false
       }
     },
   }
@@ -191,12 +191,12 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       } else {
         panic!("지름신불타네")
       }
-      return false;
+      false
     } else if *close == Expect::Itelic {
       compiler.expected.pop();
       namumarkresult.push(Objects::Char('\''));
       *result = RenderObject::Itelic(Itelic { content: namumarkresult.to_vec() });
-      return false;
+      false
     }else if let (true, _, _, exp) = compiler.contains_for_parsing_more(|x| x == &Expect::Bold || x == &Expect::Itelic) {
       if exp == Expect::Bold {
         compiler.expected.pop();
@@ -204,7 +204,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
           Expect::Bold,
           a_whole_my_vec(&Expect::Bold, namumarkresult),
         ));
-        return false;
+        false
       } else {
         compiler.expected.pop();
         namumarkresult.push(Objects::Char('\''));
@@ -212,11 +212,11 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
           Expect::Itelic,
           a_whole_my_vec(&Expect::Itelic, namumarkresult),
         ));
-        return false;
+        false
       }
     } else {
       compiler.index -= 3;
-      return true;
+      true
     }
   } else if compiler.peak("''") {
     compiler.index += 2;
@@ -227,13 +227,13 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       } else {
         panic!("지름신불타네")
       }
-      return false;
+      false
     } else if *close == Expect::Bold {
       compiler.expected.pop();
       namumarkresult.insert(0, Objects::Char('\''));
       *result = RenderObject::Itelic(Itelic {
         content:namumarkresult.to_vec()});
-      return false;
+      false
     }else if let (true, _, _, exp) = compiler.contains_for_parsing_more(|x| x == &Expect::Itelic || x == &Expect::Bold) {
       if exp == Expect::Bold {
         compiler.expected.pop();
@@ -249,10 +249,10 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
           a_whole_my_vec(&Expect::Itelic, namumarkresult),
         ));
       }
-      return false;
+      false
     } else {
       compiler.index -= 2;
-      return true;
+      true
     }
   }else if compiler.peak("~~") {
     compiler.index += 2;
@@ -263,17 +263,17 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       } else {
         panic!("지름신불타네")
       }
-      return false;
+      false
     }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::DelTidal) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::DelTidal,
         a_whole_my_vec(&Expect::Bold, namumarkresult),
       ));
-      return false;
+      false
     } else {
       compiler.index -= 2;
-      return true;
+      true
     }
   }else if compiler.peak("--") {
     compiler.index += 2;
@@ -284,17 +284,17 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       } else {
         panic!("지름신불타네")
       }
-      return false;
+      false
     }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::DelBar) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::DelBar,
         a_whole_my_vec(&Expect::DelBar, namumarkresult),
       ));
-      return false;
+      false
     } else {
       compiler.index -= 2;
-      return true;
+      true
     }
   }else if compiler.peak("__") {
     compiler.index += 2;
@@ -305,17 +305,17 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       } else {
         panic!("지름신불타네")
       }
-      return false;
+      false
     }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::UnderLine) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::UnderLine,
         a_whole_my_vec(&Expect::UnderLine, namumarkresult),
       ));
-      return false;
+      false
     } else {
       compiler.index -= 2;
-      return true;
+      true
     }
   }else if compiler.peak(",,") {
     compiler.index += 2;
@@ -326,17 +326,17 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       } else {
         panic!("지름신불타네")
       }
-      return false;
+      false
     }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::Lower) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::Lower,
         a_whole_my_vec(&Expect::Lower, namumarkresult),
       ));
-      return false;
+      false
     } else {
       compiler.index -= 2;
-      return true;
+      true
     }
   }else if compiler.peak("^^") {
     compiler.index += 3;
@@ -347,20 +347,20 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       } else {
         panic!("지름신불타네")
       }
-      return false;
+      false
     }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::Upper) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::Upper,
         a_whole_my_vec(&Expect::Upper, namumarkresult),
       ));
-      return false;
+      false
     } else {
       compiler.index -= 2;
-      return true;
+      true
     }
   } else {
-    return true;
+    true
   }
 }
 fn a_whole_my_vec(close:&Expect, namumarkresult:&mut Vec<Objects>) -> Vec<Objects> {

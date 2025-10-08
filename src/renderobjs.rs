@@ -170,7 +170,7 @@ impl InnerToString for RenderObject {
         result.push_str("[[");
         result.push_str(&lk.to);
         if !lk.show.is_empty() {
-          result.push_str("|");
+          result.push('|');
           result.push_str(&lk.show.to_string());
         }
         result.push_str("]]");
@@ -179,11 +179,11 @@ impl InnerToString for RenderObject {
         let nt = nt.clone();
         result.push_str("{{{#!");
         result.push_str(&nt.triplename);
-        result.push_str(" ");
+        result.push(' ');
         if nt.attr.is_some() {
           result.push_str(&nt.attr.unwrap());
         }
-        result.push_str("\n");
+        result.push('\n');
         if nt.content.is_some() {
           result.push_str(&nt.content.unwrap().to_string());
         }
@@ -197,13 +197,13 @@ impl InnerToString for RenderObject {
         result.push_str("}}}");
       }
       RenderObject::NamumarkMacro(nm) => {
-        result.push_str("[");
+        result.push('[');
         if nm.macroarg.is_none() {
           result.push_str(&nm.macroname);
-          result.push_str("]");
+          result.push(']');
         } else {
           result.push_str(&nm.macroname);
-          result.push_str("(");
+          result.push('(');
           result.push_str(nm.macroarg.as_ref().unwrap());
           result.push_str(")]");
         }
@@ -239,13 +239,13 @@ impl InnerToString for RenderObject {
             }
           }
           if !a {
-            result.push_str("#");
+            result.push('#');
             result.push_str(lt.from.unwrap().to_string().as_str());
             a = true;
           }
-          result.push_str(" ");
+          result.push(' ');
           result.push_str(&i.content.to_string());
-          result.push_str("\n");
+          result.push('\n');
         }
       }
       RenderObject::Quote(qt) => {}
@@ -280,7 +280,7 @@ impl InnerToString for Vec<Objects> {
           result.push(*ch);
         }
         Some(Objects::RenderObject(rdobj)) => {
-          result.extend(rdobj.to_string().chars());
+          result.push_str(&rdobj.to_string());
         }
         None => {
           break;

@@ -35,7 +35,7 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
             compiler.index += 2;
             compiler.expected.pop();
             *result = RenderObject::Link(Link {
-              to: to,
+              to,
               show: Vec::new(),
               link_type: LinkType::Hyper,
             });
@@ -43,7 +43,7 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
             last_dance(result, &what);
             return false;
           }
-          if ch.clone() == '|' {
+          if ch == '|' {
             compiler.index += 1;
             break;
           }
@@ -57,7 +57,7 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
         }
       }
       *result = RenderObject::Link(Link {
-        to: to,
+        to,
         show: Vec::new(),
         link_type: LinkType::Hyper,
       })
@@ -93,7 +93,7 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
         }
       }
       *result = RenderObject::NamuTriple(NamuTriple {
-        triplename: triplename,
+        triplename,
         attr: Some(attr),
         content: Some(Vec::new()),
       })
@@ -129,7 +129,7 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
             });
           }
           return false;
-        } else if compiler.current() == None {
+        } else if compiler.current().is_none() {
           compiler.index = index;
           *result = RenderObject::AddBefore(slices("[*".to_string()));
           return false;
@@ -146,7 +146,7 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
       let index = compiler.index;
       let mut string = String::new();
       loop {
-        if compiler.current() == None {
+        if compiler.current().is_none() {
           compiler.index = index;
           *result = compiler.get_before_earlyparse(slices("{{{".to_string()));
           compiler.expected.pop();
@@ -166,11 +166,9 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
           } else {
             string.push_str("}}}");
           }
-        } else {
-          if let Some(Objects::Char(ch)) = compiler.current() {
-            string.push(ch);
-            compiler.index += 1;
-          }
+        } else if let Some(Objects::Char(ch)) = compiler.current() {
+          string.push(ch);
+          compiler.index += 1;
         }
       }
       *result = RenderObject::Literal(string);
@@ -220,22 +218,22 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
         _ => NamuMacroType::Custom,
       };
       *result = RenderObject::NamumarkMacro(NamumarkMacro {
-        macroname: macroname,
+        macroname,
         macroarg: Some(macroarg),
-        macrotype: macrotype,
+        macrotype,
       });
       return false;
     }
     Expect::List(lvl) => {
       *result = RenderObject::ListLine(ListLine {
-        lvl: lvl.clone(),
+        lvl: *lvl,
         content: Vec::new(),
       })
       //
     }
     Expect::Quote(lvl) => {
       *result = RenderObject::QuoteLine(QuoteLine {
-        lvl: lvl.clone(),
+        lvl: *lvl,
         content: Vec::new(),
       })
     }
@@ -295,7 +293,7 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
       panic!("issue Repo2joo/Namumark!")
     }
   }
-  return true;
+  true
 }
 fn namumarker(
   compiler: &mut Compiler,
@@ -304,12 +302,11 @@ fn namumarker(
   result: &mut RenderObject,
 ) -> bool {
   fn listeq(namumarkresultlast: Option<&Objects>, listtype: ListType) -> bool {
-    if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresultlast {
-      if lt.listtype == listtype {
+    if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresultlast
+      && lt.listtype == listtype {
         return false;
       }
-    }
-    return true;
+    true
   }
   if let Some(Objects::Char(ch)) = compiler.current() {
     if compiler.rollbacks.is_some()
@@ -495,7 +492,7 @@ fn namumarker(
       compiler.index += 10;
       compiler.redirect = Some(String::new());
       loop {
-        if compiler.current() == Some(Objects::Char('\n')) || compiler.current() == None {
+        if compiler.current() == Some(Objects::Char('\n')) || compiler.current().is_none() {
           break;
         } else {
           let current = compiler.current();
@@ -516,7 +513,7 @@ fn namumarker(
       }
       loop {
         compiler.index += 1;
-        if compiler.current() == Some(Objects::Char('\n')) || compiler.current() == None {
+        if compiler.current() == Some(Objects::Char('\n')) || compiler.current().is_none() {
           if fix {
             compiler.fixed_comments.push("".to_string())
           }
@@ -664,7 +661,7 @@ fn namumarker(
       match rendobj {
         RenderObject::LastRollBack => {
           if Expect::None == *close {
-            compiler.index = compiler.expected.get(0).unwrap().1;
+            compiler.index = compiler.expected.first().unwrap().1;
             return true;
           }
           *result = RenderObject::LastRollBack;
@@ -765,7 +762,7 @@ fn namumarker(
           } else {
             namumarkresult.extend(tuple.1);
             *result =
-              RenderObject::EarlyParse((tuple.0, a_whole_my_vec(&result, namumarkresult, &close)));
+              RenderObject::EarlyParse((tuple.0, a_whole_my_vec(result, namumarkresult, close)));
             return false;
           }
         } //[[ {{{#!wiki 안녕]] }}} 대충 이런거 처리용
@@ -793,67 +790,65 @@ fn namumarker(
     } else {
       true
     };
+  } else if *close == Expect::None {
+    compiler.array = namumarkresult.to_vec();
+    *result = RenderObject::NopNopNop;
+    return false;
   } else {
-    if *close == Expect::None {
-      compiler.array = namumarkresult.to_vec();
-      *result = RenderObject::NopNopNop;
-      return false;
-    } else {
-      //where is my ibus
-      if let Expect::List(how) = close {
-        *result = RenderObject::ListLine(ListLine {
-          lvl: *how,
-          content: namumarkresult.to_vec(),
-        });
-        return false;
-      }
-      let listfind = compiler.contains_for_parsing_more(|x| matches!(x, &Expect::List(_)));
-
-      if let (true, what, how, Expect::List(listhow)) = listfind {
-        if what {
-          compiler.rollbacks = Some(how);
-          *result = RenderObject::EarlyParseRollBack(Expect::List(listhow));
-          return false;
-        } else {
-          *result = RenderObject::EarlyParse((
-            Expect::List(listhow),
-            a_whole_my_vec(result, namumarkresult, close),
-          ));
-          return false;
-        }
-      }
-      if let Expect::Quote(how) = close {
-        *result = RenderObject::QuoteLine(QuoteLine {
-          lvl: *how,
-          content: namumarkresult.to_vec(),
-        });
-        return false;
-      }
-      if let (true, what, how, Expect::Quote(quotehow)) =
-        compiler.contains_for_parsing_more(|x| matches!(x, &Expect::Quote(_)))
-      {
-        if what {
-          compiler.rollbacks = Some(how);
-          *result = RenderObject::EarlyParseRollBack(Expect::Quote(quotehow));
-          return false;
-        } else {
-          *result = RenderObject::EarlyParse((
-            Expect::Quote(quotehow),
-            a_whole_my_vec(result, namumarkresult, close),
-          ));
-          return false;
-        }
-      }
-      if let (_, true, us) = compiler.contains_for_parsing(|x| x == &Expect::None) {
-        compiler.rollbacks = Some(us);
-        *result = RenderObject::LastRollBack;
-        return false;
-      }
-      *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
+    //where is my ibus
+    if let Expect::List(how) = close {
+      *result = RenderObject::ListLine(ListLine {
+        lvl: *how,
+        content: namumarkresult.to_vec(),
+      });
       return false;
     }
+    let listfind = compiler.contains_for_parsing_more(|x| matches!(x, &Expect::List(_)));
+
+    if let (true, what, how, Expect::List(listhow)) = listfind {
+      if what {
+        compiler.rollbacks = Some(how);
+        *result = RenderObject::EarlyParseRollBack(Expect::List(listhow));
+        return false;
+      } else {
+        *result = RenderObject::EarlyParse((
+          Expect::List(listhow),
+          a_whole_my_vec(result, namumarkresult, close),
+        ));
+        return false;
+      }
+    }
+    if let Expect::Quote(how) = close {
+      *result = RenderObject::QuoteLine(QuoteLine {
+        lvl: *how,
+        content: namumarkresult.to_vec(),
+      });
+      return false;
+    }
+    if let (true, what, how, Expect::Quote(quotehow)) =
+      compiler.contains_for_parsing_more(|x| matches!(x, &Expect::Quote(_)))
+    {
+      if what {
+        compiler.rollbacks = Some(how);
+        *result = RenderObject::EarlyParseRollBack(Expect::Quote(quotehow));
+        return false;
+      } else {
+        *result = RenderObject::EarlyParse((
+          Expect::Quote(quotehow),
+          a_whole_my_vec(result, namumarkresult, close),
+        ));
+        return false;
+      }
+    }
+    if let (_, true, us) = compiler.contains_for_parsing(|x| x == &Expect::None) {
+      compiler.rollbacks = Some(us);
+      *result = RenderObject::LastRollBack;
+      return false;
+    }
+    *result = RenderObject::Nop(a_whole_my_vec(result, namumarkresult, close));
+    return false;
   }
-  return true;
+  true
 }
 fn a_whole_my_vec(
   result: &RenderObject,
@@ -872,18 +867,18 @@ fn a_whole_my_vec(
       } else {
         panic!();
       };
-      return resultt;
+      resultt
     }
     Expect::Link => {
       let mut resultt = vec![Objects::Char('['), Objects::Char('[')];
       if let RenderObject::Link(link) = result {
         resultt.extend_from_slice(&slices(link.to.clone()));
         resultt.push(Objects::Char('|'));
-        resultt.extend_from_slice(&namumarkresult);
+        resultt.extend_from_slice(namumarkresult);
       } else {
         panic!();
       };
-      return resultt;
+      resultt
     }
     Expect::Color => {
       let mut resultt = slices("{{{#".to_string());
@@ -895,7 +890,7 @@ fn a_whole_my_vec(
       } else {
         panic!();
       };
-      return resultt;
+      resultt
     }
     Expect::Plus => {
       let mut resultt = slices("{{{+".to_string());
@@ -906,7 +901,7 @@ fn a_whole_my_vec(
       } else {
         panic!();
       };
-      return resultt;
+      resultt
     }
     Expect::Minus => {
       let mut resultt = slices("{{{-".to_string());
@@ -917,7 +912,7 @@ fn a_whole_my_vec(
       } else {
         panic!();
       };
-      return resultt;
+      resultt
     }
     Expect::TripleWithNamuMark => {
       let mut resultt = slices("{{{#!".to_string());
@@ -930,13 +925,13 @@ fn a_whole_my_vec(
       } else {
         panic!();
       };
-      return resultt;
+      resultt
     }
     Expect::JustTriple => {
       let mut resultt = slices("{{{".to_string());
       if let RenderObject::Literal(lt) = result {
         resultt.extend_from_slice(&slices(lt.clone()));
-        resultt.extend_from_slice(&namumarkresult);
+        resultt.extend_from_slice(namumarkresult);
       } else {
         panic!();
       };
@@ -944,31 +939,31 @@ fn a_whole_my_vec(
     }
     Expect::List(_) => {
       if let RenderObject::ListLine(ll) = result {
-        return vec![Objects::RenderObject(RenderObject::ListLine(ListLine {
+        vec![Objects::RenderObject(RenderObject::ListLine(ListLine {
           lvl: ll.lvl,
           content: namumarkresult.to_vec(),
-        }))];
+        }))]
       } else {
         panic!()
       }
     }
     Expect::Quote(_) => {
       if let RenderObject::QuoteLine(ql) = result {
-        return vec![Objects::RenderObject(RenderObject::QuoteLine(QuoteLine {
+        vec![Objects::RenderObject(RenderObject::QuoteLine(QuoteLine {
           lvl: ql.lvl,
           content: namumarkresult.to_vec(),
-        }))];
+        }))]
       } else {
         panic!()
       }
     }
     Expect::Heading(how) => {
-      let mut rt = slices("=".repeat(how.clone()));
+      let mut rt = slices("=".repeat(*how));
       rt.extend(namumarkresult.to_vec());
-      return rt;
+      rt
     }
     Expect::None => {
-      return namumarkresult.to_vec();
+      namumarkresult.to_vec()
     }
     _ => {
       panic!("이거나 먹어라: {:?}", close);
@@ -1014,32 +1009,30 @@ fn parsing_close(
         ));
         return Some(false);
       }
-    } else {
-      if compiler.peak("]]") {
-        compiler.index += 2;
-        //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
-        if *close == Expect::Link {
-          compiler.expected.pop();
-          last_dance(result, namumarkresult);
+    } else if compiler.peak("]]") {
+      compiler.index += 2;
+      //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
+      if *close == Expect::Link {
+        compiler.expected.pop();
+        last_dance(result, namumarkresult);
+        return Some(false);
+      } else if let (true, what, how) = compiler.contains_for_parsing(|x| x == &Expect::Link) {
+        if what {
+          *result = RenderObject::EarlyParseRollBack(Expect::Link);
+          compiler.rollbacks = Some(how);
           return Some(false);
-        } else if let (true, what, how) = compiler.contains_for_parsing(|x| x == &Expect::Link) {
-          if what {
-            *result = RenderObject::EarlyParseRollBack(Expect::Link);
-            compiler.rollbacks = Some(how);
-            return Some(false);
-          } else {
-            compiler.expected.pop();
-            *result = RenderObject::EarlyParse((
-              Expect::Link,
-              a_whole_my_vec(result, namumarkresult, close),
-            ));
-            return Some(false);
-          }
         } else {
-          namumarkresult.push(Objects::Char(']'));
-          namumarkresult.push(Objects::Char(']'));
-          return Some(true);
+          compiler.expected.pop();
+          *result = RenderObject::EarlyParse((
+            Expect::Link,
+            a_whole_my_vec(result, namumarkresult, close),
+          ));
+          return Some(false);
         }
+      } else {
+        namumarkresult.push(Objects::Char(']'));
+        namumarkresult.push(Objects::Char(']'));
+        return Some(true);
       }
     }
   } else if compiler.peak("\n") {
@@ -1094,7 +1087,7 @@ fn parsing_close(
       } else {
         compiler.expected.pop();
         *result = RenderObject::EarlyParse((
-          Expect::Quote(qt.clone()),
+          Expect::Quote(*qt),
           a_whole_my_vec(result, namumarkresult, close),
         ));
         return Some(false);
@@ -1114,7 +1107,7 @@ fn parsing_close(
       compiler.expected.remove(idx);
       compiler
         .expected
-        .insert(idx, (Expect::None, b.clone(), c.clone()));
+        .insert(idx, (Expect::None, *b, *c));
       return Some(true);
     }
 
@@ -1139,7 +1132,7 @@ fn parsing_close(
         return Some(false);
       } else {
         *result = RenderObject::EarlyParse((
-          Expect::Heading(hd.clone()),
+          Expect::Heading(*hd),
           a_whole_my_vec(result, namumarkresult, close),
         ));
         return Some(false);
@@ -1160,8 +1153,8 @@ fn parsing_close(
         return Some(false);
       }
     }
-    if *close == Expect::Plus {
-      if let RenderObject::Plus(pl) = result {
+    if *close == Expect::Plus
+      && let RenderObject::Plus(pl) = result {
         if let Some(Objects::Char(ch)) = namumarkresult.first() {
           pl.how = ch.to_string().parse().unwrap();
           namumarkresult.remove(0);
@@ -1173,9 +1166,8 @@ fn parsing_close(
         compiler.expected.pop();
         return Some(false);
       }
-    }
-    if *close == Expect::Minus {
-      if let RenderObject::Minus(pl) = result {
+    if *close == Expect::Minus
+      && let RenderObject::Minus(pl) = result {
         if let Some(Objects::Char(ch)) = namumarkresult.first() {
           pl.how = ch.to_string().parse().unwrap();
           namumarkresult.remove(0);
@@ -1187,17 +1179,10 @@ fn parsing_close(
         compiler.expected.pop();
         return Some(false);
       }
-    }
     let find = compiler.contains_for_parsing_more(|exp| {
-      if exp == &Expect::Color
+      exp == &Expect::Color
         || exp == &Expect::TripleWithNamuMark
-        || exp == &Expect::Plus
-        || exp == &Expect::Minus
-      {
-        true
-      } else {
-        false
-      }
+        || exp == &Expect::Plus || exp == &Expect::Minus
     });
     if let (true, what, how, Expect::Color) = find {
       if what {
@@ -1245,7 +1230,7 @@ fn parsing_close(
     namumarkresult.extend(slices("}}}".to_string()));
     return Some(true);
   }
-  return None;
+  None
 }
 fn last_dance(result: &mut RenderObject, namumarkresult: &Vec<Objects>) {
   match result {
@@ -1271,7 +1256,7 @@ fn last_dance(result: &mut RenderObject, namumarkresult: &Vec<Objects>) {
         } else {
           let bigger = std::cmp::max(hd.lvl, index);
           if hd.lvl == index {
-            if namumarkresult.get(0) == Some(&Objects::Char('#'))
+            if namumarkresult.first() == Some(&Objects::Char('#'))
               && namumarkresult.get(namumarkresult.len() - index) == Some(&Objects::Char('#'))
             {
               hd.folded = true;
@@ -1280,7 +1265,7 @@ fn last_dance(result: &mut RenderObject, namumarkresult: &Vec<Objects>) {
               hd.content.pop();
             }
           } else if bigger == hd.lvl {
-            if namumarkresult.get(0) == Some(&Objects::Char('#'))
+            if namumarkresult.first() == Some(&Objects::Char('#'))
               && namumarkresult.get(namumarkresult.len() - index) == Some(&Objects::Char('#'))
             {
               hd.folded = true;
@@ -1291,7 +1276,7 @@ fn last_dance(result: &mut RenderObject, namumarkresult: &Vec<Objects>) {
             }
             hd.lvl = index;
           } else if bigger == index {
-            if namumarkresult.get(0) == Some(&Objects::Char('#'))
+            if namumarkresult.first() == Some(&Objects::Char('#'))
               && namumarkresult.get(namumarkresult.len() - index) == Some(&Objects::Char('#'))
             {
               hd.folded = true;

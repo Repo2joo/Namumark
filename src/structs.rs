@@ -91,7 +91,7 @@ pub enum NamuMacroType {
 }
 impl Compiler {
   pub(crate) fn get_before_earlyparse(&self, vec: Vec<Objects>) -> RenderObject {
-    return RenderObject::AddBefore(vec);
+    RenderObject::AddBefore(vec)
   }
   pub(crate) fn peak_macro(&mut self) -> Option<String> {
     for i in self.custom_macro.to_vec() {
@@ -103,7 +103,7 @@ impl Compiler {
         return Some(i.name);
       }
     }
-    return None;
+    None
   }
   pub(crate) fn peak_macro_arg(&self) -> bool {
     for i in self.custom_macro.clone() {
@@ -114,7 +114,7 @@ impl Compiler {
         return true;
       }
     }
-    return false;
+    false
   }
   ///return Compiler from string
   pub fn from(string: String) -> Compiler {
@@ -130,7 +130,7 @@ impl Compiler {
     for char in string.chars() {
       compiler.array.push(Objects::Char(char));
     }
-    return compiler;
+    compiler
   }
   ///parse the string
   pub fn parse(&mut self) {
@@ -161,7 +161,7 @@ impl Compiler {
       }
       idx += 1;
     }
-    return true;
+    true
   }
   pub(crate) fn peak_line(&mut self, str: &str) -> bool {
     let mut idx = 0;
@@ -180,7 +180,7 @@ impl Compiler {
       }
       idx += 1;
     }
-    return true;
+    true
   }
   pub(crate) fn contains_for_parsing(
     &self,
@@ -211,13 +211,13 @@ impl Compiler {
       loop {
         if self.get(self.index + idx) == Some(&Objects::Char(ch)) {
           idx += 1;
-        } else if end == None && idx != 0 {
+        } else if end.is_none() && idx != 0 {
           return (true, idx);
         } else if end.is_some()
-          && end.unwrap().len() + self.index + idx + 1 <= self.array.len()
+          && end.unwrap().len() + self.index + idx < self.array.len()
           && 에휴_진짜_왜그럼(
             &self.array[self.index + idx..end.unwrap().len() + self.index + idx],
-          ) == String::from(end.unwrap())
+          ) == end.unwrap()
           && idx != 0
         {
           println!("a");
@@ -469,12 +469,10 @@ impl Compiler {
           && ch.is_ascii_hexdigit()
         {
           index += 1;
+        } else if index == rollbackindex + 3 || index == rollbackindex + 6 {
+          break;
         } else {
-          if index == rollbackindex + 3 || index == rollbackindex + 6 {
-            break;
-          } else {
-            return false;
-          }
+          return false;
         }
       }
     }
@@ -489,7 +487,7 @@ fn 에휴_진짜_왜그럼(sliceee: &[Objects]) -> String {
   let mut result = String::new();
   for obj in sliceee {
     if let Objects::Char(ch) = obj {
-      result.push(ch.clone());
+      result.push(*ch);
     } else {
       panic!();
     }
