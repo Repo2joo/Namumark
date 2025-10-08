@@ -390,7 +390,7 @@ fn namumarker(
           macrotype: NamuMacroType::Date,
         },
       )));
-      true;
+      return true;
     } else if compiler.peak("[datetime]") {
       compiler.index += 10;
       namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(
@@ -400,7 +400,7 @@ fn namumarker(
           macrotype: NamuMacroType::Date,
         },
       )));
-      true;
+      return true;
     } else if compiler.peak("[목차]") {
       compiler.index += 4;
       namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(
@@ -410,7 +410,7 @@ fn namumarker(
           macrotype: NamuMacroType::TableOfContents,
         },
       )));
-      true;
+      return true;
     } else if compiler.peak("[tableofcontents]") {
       compiler.index += 17;
       namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(
@@ -420,7 +420,7 @@ fn namumarker(
           macrotype: NamuMacroType::TableOfContents,
         },
       )));
-      true;
+      return true;
     } else if compiler.peak("[각주]") {
       compiler.index += 4;
       namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(
@@ -430,7 +430,7 @@ fn namumarker(
           macrotype: NamuMacroType::Reference,
         },
       )));
-      true;
+      return true;
     } else if compiler.peak("[footnote]") {
       compiler.index += 10;
       namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(
@@ -440,7 +440,7 @@ fn namumarker(
           macrotype: NamuMacroType::Reference,
         },
       )));
-      true;
+      return true;
     } else if compiler.peak("[br]") {
       compiler.index += 4;
       namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(
@@ -450,7 +450,7 @@ fn namumarker(
           macrotype: NamuMacroType::Br,
         },
       )));
-      true;
+      return true;
     } else if compiler.peak("[clearfix]") {
       compiler.index += 10;
       namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(
@@ -460,7 +460,7 @@ fn namumarker(
           macrotype: NamuMacroType::Clearfix,
         },
       )));
-      true;
+      return true;
     } else if let Some(s) = compiler.peak_macro() {
       namumarkresult.push(Objects::RenderObject(RenderObject::NamumarkMacro(
         NamumarkMacro {
@@ -469,7 +469,7 @@ fn namumarker(
           macrotype: NamuMacroType::Custom,
         },
       )));
-      true;
+      return true;
     } else if compiler.peak("[youtube(")
       || compiler.peak("[nicovideo(")
       || compiler.peak("[vimeo(")
@@ -529,7 +529,7 @@ fn namumarker(
           }
         }
       }
-      true;
+      return true;
     } else if let (true, how) = compiler.peak_repeat_line(' ', Some("1.")) {
       compiler.index += how + 2;
       compiler
@@ -654,7 +654,7 @@ fn namumarker(
     } else {
       namumarkresult.push(Objects::Char(ch));
       compiler.index += 1;
-      true;
+      return true;
     }
 
     if let Some(rendobj) = thisparsing {
