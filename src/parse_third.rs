@@ -1,7 +1,11 @@
 use std::mem::discriminant;
 
 //이게 파서냐
-use crate::{parser_first::slices, renderobjs::{Bold, DelBar, DelTidal, Itelic, Lower, RenderObject, UnderLine, Upper}, structs::{Compiler, Expect, Objects}};
+use crate::{
+  parser_first::slices,
+  renderobjs::{Bold, DelBar, DelTidal, Itelic, Lower, RenderObject, Table, TableRow, UnderLine, Upper},
+  structs::{Compiler, Expect, Objects},
+};
 
 pub fn parse_third(compiler: &mut Compiler, close: Expect) -> RenderObject {
   let mut result = RenderObject::NopNopNop;
@@ -19,7 +23,7 @@ fn prepare_result(result: &mut RenderObject, close: &Expect) {
       })
     }
     Expect::Itelic => {
-      *result = RenderObject::Itelic( Itelic {
+      *result = RenderObject::Itelic(Itelic {
         content: Vec::new(),
       })
     }
@@ -39,22 +43,32 @@ fn prepare_result(result: &mut RenderObject, close: &Expect) {
       })
     }
     Expect::Upper => {
-      *result = RenderObject::Upper(Upper{
+      *result = RenderObject::Upper(Upper {
         content: Vec::new(),
       })
     }
     Expect::Lower => {
-      *result = RenderObject::Lower( Lower{
+      *result = RenderObject::Lower(Lower {
         content: Vec::new(),
       })
-    },
+    }
+    Expect::Table => {
+      *result = RenderObject::Table(Table {
+        table_row: Vec::new(),
+      })
+    }
     _ => {
       panic!()
     }
   }
 }
-fn namumarker(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject, namumarkresult:&mut Vec<Objects>) -> bool {
-  let mut thisparsing:Option<RenderObject> = None;
+fn namumarker(
+  compiler: &mut Compiler,
+  close: &Expect,
+  result: &mut RenderObject,
+  namumarkresult: &mut Vec<Objects>,
+) -> bool {
+  let mut thisparsing: Option<RenderObject> = None;
   match compiler.current() {
     Some(Objects::Char(ch)) => {
       if !parsing_close(compiler, close, result, namumarkresult) {
@@ -62,35 +76,55 @@ fn namumarker(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject
       }
       if compiler.peak("'''") {
         compiler.index += 3;
-        compiler.expected.push((Expect::Bold, compiler.index, false));
+        compiler
+          .expected
+          .push((Expect::Bold, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::Bold));
-      }else if compiler.peak("''") {
+      } else if compiler.peak("''") {
         compiler.index += 2;
-        compiler.expected.push((Expect::Itelic, compiler.index, false));
+        compiler
+          .expected
+          .push((Expect::Itelic, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::Itelic));
-      }else if compiler.peak("~~") {
+      } else if compiler.peak("~~") {
         compiler.index += 2;
-        compiler.expected.push((Expect::DelTidal, compiler.index, false));
+        compiler
+          .expected
+          .push((Expect::DelTidal, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::DelTidal));
-      }else if compiler.peak("--") {
+      } else if compiler.peak("--") {
         compiler.index += 2;
-        compiler.expected.push((Expect::DelBar, compiler.index, false));
+        compiler
+          .expected
+          .push((Expect::DelBar, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::DelBar));
-      }else if compiler.peak("__") {
+      } else if compiler.peak("__") {
         compiler.index += 2;
-        compiler.expected.push((Expect::UnderLine, compiler.index, false));
+        compiler
+          .expected
+          .push((Expect::UnderLine, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::UnderLine));
-      }else if compiler.peak("^^") {
+      } else if compiler.peak("^^") {
         compiler.index += 2;
-        compiler.expected.push((Expect::Upper, compiler.index, false));
+        compiler
+          .expected
+          .push((Expect::Upper, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::Upper));
-      }else if compiler.peak(",,") {
+      } else if compiler.peak(",,") {
         compiler.index += 2;
-        compiler.expected.push((Expect::Lower, compiler.index, false));
+        compiler
+          .expected
+          .push((Expect::Lower, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::Lower));
+      } else if compiler.peak_line("||") {
+        compiler.index += 2;
+        compiler
+          .expected
+          .push((Expect::Table, compiler.index, false));
+        thisparsing = Some(parse_third(compiler, Expect::Table));
       } else {
         compiler.index += 1;
-       namumarkresult.push(Objects::Char(ch));
+        namumarkresult.push(Objects::Char(ch));
       }
       if let Some(rdobj) = thisparsing {
         match rdobj {
@@ -99,7 +133,7 @@ fn namumarker(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject
             namumarkresult.extend(items);
             *result = RenderObject::Nop(a_whole_my_vec(close, namumarkresult));
             return false;
-          },
+          }
           RenderObject::EarlyParse(tuple) => {
             compiler.expected.pop();
             if discriminant(close) == discriminant(&tuple.0) {
@@ -109,37 +143,37 @@ fn namumarker(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject
                     bd.content.extend(tuple.1);
                     return false;
                   }
-                },
+                }
                 Expect::Itelic => {
                   if let RenderObject::Itelic(it) = result {
                     it.content.extend(tuple.1);
                     return false;
                   }
-                },
+                }
                 Expect::DelTidal => {
                   if let RenderObject::DelTidal(dt) = result {
                     dt.content.extend(tuple.1);
                     return false;
                   }
-                },
+                }
                 Expect::DelBar => {
                   if let RenderObject::DelBar(db) = result {
                     db.content.extend(tuple.1);
                     return false;
                   }
-                },
+                }
                 Expect::UnderLine => {
                   if let RenderObject::UnderLine(ul) = result {
                     ul.content.extend(tuple.1);
                     return false;
                   }
-                },
+                }
                 Expect::Upper => {
                   if let RenderObject::Upper(up) = result {
                     up.content.extend(tuple.1);
                     return false;
                   }
-                },
+                }
                 Expect::Lower => {
                   if let RenderObject::Lower(lw) = result {
                     lw.content.extend(tuple.1);
@@ -150,11 +184,10 @@ fn namumarker(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject
               }
             } else {
               namumarkresult.extend(tuple.1);
-              *result =
-              RenderObject::EarlyParse((tuple.0, a_whole_my_vec(close, namumarkresult)));
+              *result = RenderObject::EarlyParse((tuple.0, a_whole_my_vec(close, namumarkresult)));
               return false;
             }
-          },
+          }
           obj => {
             namumarkresult.push(Objects::RenderObject(obj));
             return true;
@@ -164,8 +197,19 @@ fn namumarker(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject
       } else {
         true
       }
-    },
+    }
     Some(Objects::RenderObject(rdobj)) => {
+      if let RenderObject::TableRow(ref tr) = rdobj {
+        if let Some(Objects::RenderObject(RenderObject::Table(tb))) = namumarkresult.last_mut() {
+        } else {
+          namumarkresult.push(Objects::RenderObject(RenderObject::Table(Table { table_row: Vec::new() })));
+        }
+        if let Some(Objects::RenderObject(RenderObject::Table(tb))) = namumarkresult.last_mut() {
+
+        let table_cells = get_table_cells(tr);
+        tb.table_row.push(table_cells);
+        }
+      }
       compiler.index += 1;
       namumarkresult.push(Objects::RenderObject(rdobj));
       true
@@ -178,11 +222,41 @@ fn namumarker(compiler: &mut Compiler, close: &Expect, result: &mut RenderObject
         *result = RenderObject::Nop(namumarkresult.to_vec());
         false
       }
-    },
+    }
   }
 }
-fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObject, namumarkresult:&mut Vec<Objects>) -> bool {
-  if compiler.peak("'''") {
+fn parsing_close(
+  compiler: &mut Compiler,
+  close: &Expect,
+  result: &mut RenderObject,
+  namumarkresult: &mut Vec<Objects>,
+) -> bool {
+  if compiler.peak("||")
+    && (compiler.index + 2 == compiler.array.len()
+      || (compiler
+        .get(compiler.index + 2)
+        .is_some_and(|x| x.eq(&Objects::Char('\n')))))
+  {
+    compiler.index += 2;
+    if *close == Expect::Table {
+      compiler.expected.pop();
+      if let RenderObject::TableRow(tr) = result {
+        *tr = namumarkresult.to_vec();
+      } else {
+        panic!("지름신불타네")
+      }
+      return false;
+    } else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::Table) {
+      compiler.expected.pop();
+      *result = RenderObject::EarlyParse((
+        Expect::Table,
+        a_whole_my_vec(&Expect::Table, namumarkresult),
+      ));
+      return false;
+    } else {
+      return true
+    }
+  } else if compiler.peak("'''") {
     compiler.index += 3;
     if *close == Expect::Bold {
       compiler.expected.pop();
@@ -195,15 +269,17 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
     } else if *close == Expect::Itelic {
       compiler.expected.pop();
       namumarkresult.push(Objects::Char('\''));
-      *result = RenderObject::Itelic(Itelic { content: namumarkresult.to_vec() });
+      *result = RenderObject::Itelic(Itelic {
+        content: namumarkresult.to_vec(),
+      });
       false
-    }else if let (true, _, _, exp) = compiler.contains_for_parsing_more(|x| x == &Expect::Bold || x == &Expect::Itelic) {
+    } else if let (true, _, _, exp) =
+      compiler.contains_for_parsing_more(|x| x == &Expect::Bold || x == &Expect::Itelic)
+    {
       if exp == Expect::Bold {
         compiler.expected.pop();
-        *result = RenderObject::EarlyParse((
-          Expect::Bold,
-          a_whole_my_vec(&Expect::Bold, namumarkresult),
-        ));
+        *result =
+          RenderObject::EarlyParse((Expect::Bold, a_whole_my_vec(&Expect::Bold, namumarkresult)));
         false
       } else {
         compiler.expected.pop();
@@ -232,9 +308,12 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       compiler.expected.pop();
       namumarkresult.insert(0, Objects::Char('\''));
       *result = RenderObject::Itelic(Itelic {
-        content:namumarkresult.to_vec()});
+        content: namumarkresult.to_vec(),
+      });
       false
-    }else if let (true, _, _, exp) = compiler.contains_for_parsing_more(|x| x == &Expect::Itelic || x == &Expect::Bold) {
+    } else if let (true, _, _, exp) =
+      compiler.contains_for_parsing_more(|x| x == &Expect::Itelic || x == &Expect::Bold)
+    {
       if exp == Expect::Bold {
         compiler.expected.pop();
         namumarkresult.insert(0, Objects::Char('\''));
@@ -254,7 +333,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       compiler.index -= 2;
       true
     }
-  }else if compiler.peak("~~") {
+  } else if compiler.peak("~~") {
     compiler.index += 2;
     if *close == Expect::DelTidal {
       compiler.expected.pop();
@@ -264,18 +343,18 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
         panic!("지름신불타네")
       }
       false
-    }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::DelTidal) {
+    } else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::DelTidal) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::DelTidal,
-        a_whole_my_vec(&Expect::Bold, namumarkresult),
+        a_whole_my_vec(&Expect::DelTidal, namumarkresult),
       ));
       false
     } else {
       compiler.index -= 2;
       true
     }
-  }else if compiler.peak("--") {
+  } else if compiler.peak("--") {
     compiler.index += 2;
     if *close == Expect::DelBar {
       compiler.expected.pop();
@@ -285,7 +364,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
         panic!("지름신불타네")
       }
       false
-    }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::DelBar) {
+    } else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::DelBar) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::DelBar,
@@ -296,7 +375,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       compiler.index -= 2;
       true
     }
-  }else if compiler.peak("__") {
+  } else if compiler.peak("__") {
     compiler.index += 2;
     if *close == Expect::UnderLine {
       compiler.expected.pop();
@@ -306,7 +385,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
         panic!("지름신불타네")
       }
       false
-    }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::UnderLine) {
+    } else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::UnderLine) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::UnderLine,
@@ -317,7 +396,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       compiler.index -= 2;
       true
     }
-  }else if compiler.peak(",,") {
+  } else if compiler.peak(",,") {
     compiler.index += 2;
     if *close == Expect::Lower {
       compiler.expected.pop();
@@ -327,7 +406,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
         panic!("지름신불타네")
       }
       false
-    }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::Lower) {
+    } else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::Lower) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::Lower,
@@ -338,7 +417,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
       compiler.index -= 2;
       true
     }
-  }else if compiler.peak("^^") {
+  } else if compiler.peak("^^") {
     compiler.index += 3;
     if *close == Expect::Upper {
       compiler.expected.pop();
@@ -348,7 +427,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
         panic!("지름신불타네")
       }
       false
-    }else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::Upper) {
+    } else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::Upper) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::Upper,
@@ -363,7 +442,7 @@ fn parsing_close(compiler: &mut Compiler, close: &Expect, result:&mut RenderObje
     true
   }
 }
-fn a_whole_my_vec(close:&Expect, namumarkresult:&mut Vec<Objects>) -> Vec<Objects> {
+fn a_whole_my_vec(close: &Expect, namumarkresult: &mut Vec<Objects>) -> Vec<Objects> {
   match close {
     Expect::Bold => {
       let mut rst = slices("'''".to_string());
@@ -403,5 +482,10 @@ fn a_whole_my_vec(close:&Expect, namumarkresult:&mut Vec<Objects>) -> Vec<Object
     _ => {
       panic!("issue github: {:?}", close)
     }
+  }
+}
+fn get_table_cells(row:&Vec<Objects>) ->TableRow {
+  TableRow {
+    table_cell:Vec::new()
   }
 }

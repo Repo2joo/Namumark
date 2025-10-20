@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::structs::{Expect, ListType, NamuMacroType, Objects};
 #[derive(Debug, PartialEq, Clone)]
 ///링크, 삼중괄 등의 변종을 가지고 있습니다.
@@ -31,35 +33,57 @@ pub enum RenderObject {
   DelBar(DelBar),
   UnderLine(UnderLine),
   Upper(Upper),
-  Lower(Lower)
+  Lower(Lower),
+  Table(Table),
+  TableRow(Vec<Objects>),
+}
+#[derive(Debug, PartialEq, Clone)]
+pub enum Direction {
+  Left, //어허 나는 왼솑더가지ㅓ아니러ㅏㅣ
+  Center,
+  Right,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct Table {
+  pub table_row: Vec<TableRow>,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct TableRow {
+  pub table_cell: Vec<TableCell>,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct TableCell {
+  arrtibute: Option<HashMap<String, String>>,
+  content: Vec<Objects>,
+  allign: Direction,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bold {
- pub content:Vec<Objects>
+  pub content: Vec<Objects>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct Itelic {
-  pub content:Vec<Objects>
+  pub content: Vec<Objects>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct DelTidal {
-  pub content:Vec<Objects>
+  pub content: Vec<Objects>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct DelBar {
-  pub content:Vec<Objects>
+  pub content: Vec<Objects>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct UnderLine {
-  pub content:Vec<Objects>
+  pub content: Vec<Objects>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct Upper {
-  pub content:Vec<Objects>
+  pub content: Vec<Objects>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct Lower {
-  pub content:Vec<Objects>
+  pub content: Vec<Objects>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct Reference {

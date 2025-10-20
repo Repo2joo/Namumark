@@ -303,9 +303,10 @@ fn namumarker(
 ) -> bool {
   fn listeq(namumarkresultlast: Option<&Objects>, listtype: ListType) -> bool {
     if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresultlast
-      && lt.listtype == listtype {
-        return false;
-      }
+      && lt.listtype == listtype
+    {
+      return false;
+    }
     true
   }
   if let Some(Objects::Char(ch)) = compiler.current() {
@@ -962,9 +963,7 @@ fn a_whole_my_vec(
       rt.extend(namumarkresult.to_vec());
       rt
     }
-    Expect::None => {
-      namumarkresult.to_vec()
-    }
+    Expect::None => namumarkresult.to_vec(),
     _ => {
       panic!("이거나 먹어라: {:?}", close);
     }
@@ -1023,10 +1022,8 @@ fn parsing_close(
           return Some(false);
         } else {
           compiler.expected.pop();
-          *result = RenderObject::EarlyParse((
-            Expect::Link,
-            a_whole_my_vec(result, namumarkresult, close),
-          ));
+          *result =
+            RenderObject::EarlyParse((Expect::Link, a_whole_my_vec(result, namumarkresult, close)));
           return Some(false);
         }
       } else {
@@ -1105,9 +1102,7 @@ fn parsing_close(
         .find(|x| matches!(x.0, Expect::Heading(_)))
     {
       compiler.expected.remove(idx);
-      compiler
-        .expected
-        .insert(idx, (Expect::None, *b, *c));
+      compiler.expected.insert(idx, (Expect::None, *b, *c));
       return Some(true);
     }
 
@@ -1154,35 +1149,38 @@ fn parsing_close(
       }
     }
     if *close == Expect::Plus
-      && let RenderObject::Plus(pl) = result {
-        if let Some(Objects::Char(ch)) = namumarkresult.first() {
-          pl.how = ch.to_string().parse().unwrap();
-          namumarkresult.remove(0);
-          namumarkresult.remove(0);
-        } else {
-          panic!();
-        }
-        pl.content = namumarkresult.to_vec();
-        compiler.expected.pop();
-        return Some(false);
+      && let RenderObject::Plus(pl) = result
+    {
+      if let Some(Objects::Char(ch)) = namumarkresult.first() {
+        pl.how = ch.to_string().parse().unwrap();
+        namumarkresult.remove(0);
+        namumarkresult.remove(0);
+      } else {
+        panic!();
       }
+      pl.content = namumarkresult.to_vec();
+      compiler.expected.pop();
+      return Some(false);
+    }
     if *close == Expect::Minus
-      && let RenderObject::Minus(pl) = result {
-        if let Some(Objects::Char(ch)) = namumarkresult.first() {
-          pl.how = ch.to_string().parse().unwrap();
-          namumarkresult.remove(0);
-          namumarkresult.remove(0);
-        } else {
-          panic!();
-        }
-        pl.content = namumarkresult.to_vec();
-        compiler.expected.pop();
-        return Some(false);
+      && let RenderObject::Minus(pl) = result
+    {
+      if let Some(Objects::Char(ch)) = namumarkresult.first() {
+        pl.how = ch.to_string().parse().unwrap();
+        namumarkresult.remove(0);
+        namumarkresult.remove(0);
+      } else {
+        panic!();
       }
+      pl.content = namumarkresult.to_vec();
+      compiler.expected.pop();
+      return Some(false);
+    }
     let find = compiler.contains_for_parsing_more(|exp| {
       exp == &Expect::Color
         || exp == &Expect::TripleWithNamuMark
-        || exp == &Expect::Plus || exp == &Expect::Minus
+        || exp == &Expect::Plus
+        || exp == &Expect::Minus
     });
     if let (true, what, how, Expect::Color) = find {
       if what {

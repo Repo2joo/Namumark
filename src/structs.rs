@@ -54,7 +54,8 @@ pub enum Expect {
   DelBar,
   UnderLine,
   Upper,
-  Lower
+  Lower,
+  Table,
 }
 #[derive(Debug, PartialEq, Clone)]
 /// The type variant of [crate::renderobjs::List]
