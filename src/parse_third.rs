@@ -245,16 +245,16 @@ fn parsing_close(
       } else {
         panic!("지름신불타네")
       }
-      return false;
+      false
     } else if let (true, _, _) = compiler.contains_for_parsing(|x| x == &Expect::Table) {
       compiler.expected.pop();
       *result = RenderObject::EarlyParse((
         Expect::Table,
         a_whole_my_vec(&Expect::Table, namumarkresult),
       ));
-      return false;
+      false
     } else {
-      return true
+      true
     }
   } else if compiler.peak("'''") {
     compiler.index += 3;
