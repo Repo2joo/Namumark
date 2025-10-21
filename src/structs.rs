@@ -95,7 +95,7 @@ impl Compiler {
     RenderObject::AddBefore(vec)
   }
   pub(crate) fn peak_macro(&mut self) -> Option<String> {
-    for i in self.custom_macro.to_vec() {
+    for i in self.custom_macro.iter().cloned() {
       if i.arg {
         continue;
       };
@@ -151,8 +151,7 @@ impl Compiler {
     self.array.get(self.index).cloned()
   }
   pub(crate) fn peak(&self, str: &str) -> bool {
-    let mut idx = 0;
-    for ch in str.chars() {
+    for (idx, ch) in str.chars().enumerate() {
       if let Some(Objects::Char(cha)) = self.get(self.index + idx) {
         if ch.to_lowercase().to_string() != *cha.to_lowercase().to_string() {
           return false;
@@ -160,7 +159,6 @@ impl Compiler {
       } else {
         return false;
       }
-      idx += 1;
     }
     true
   }
@@ -439,7 +437,7 @@ impl Compiler {
     {
       index += 2;
     } else {
-      false;
+      return false;
     }
     indexes.clear();
     is_color = false;

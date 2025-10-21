@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+
 
 use crate::structs::{Expect, ListType, NamuMacroType, Objects};
 #[derive(Debug, PartialEq, Clone)]
@@ -53,10 +53,38 @@ pub struct TableRow {
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct TableCell {
-  arrtibute: Option<HashMap<String, String>>,
-  content: Vec<Objects>,
-  allign: Direction,
+  pub attribute: CellAttribute,
+  pub content: Vec<Objects>,
+  pub allign: Option<Direction>,
+  pub height_align: Option<Altitude>,
 }
+#[derive(Debug, PartialEq, Clone)]
+pub enum Altitude {
+  High,
+  Middle,
+  Low,
+}
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct CellAttribute {
+  pub nopad: bool,
+  pub rowspan: Option<String>,
+  pub height: Option<String>,
+  pub width: Option<String>,
+  pub keepall: bool,
+  pub colkeepall: bool,
+  pub rowkeepall: bool,
+  pub bgcolor: LightNightColor,
+  pub table_bordercolor:LightNightColor,
+  pub bordercolor:LightNightColor,
+  pub color:LightNightColor,
+  pub table_bgcolor:LightNightColor,
+  pub row_color:LightNightColor,
+  pub col_color:LightNightColor,
+  pub row_bgcolor:LightNightColor,
+  pub col_bgcolor:LightNightColor,
+  pub table_color:LightNightColor
+}
+type LightNightColor = Option<(Option<String>, Option<String>)>;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bold {
   pub content: Vec<Objects>,
@@ -184,134 +212,4 @@ pub struct NamumarkMacro {
   pub macroname: String,
   pub macroarg: Option<String>,
   pub macrotype: NamuMacroType,
-}
-impl InnerToString for RenderObject {
-  fn to_string(&self) -> String {
-    let mut result = String::new();
-    match self {
-      //두글자로 줄이기 달인😎😎😎
-      RenderObject::Link(lk) => {
-        result.push_str("[[");
-        result.push_str(&lk.to);
-        if !lk.show.is_empty() {
-          result.push('|');
-          result.push_str(&lk.show.to_string());
-        }
-        result.push_str("]]");
-      }
-      RenderObject::NamuTriple(nt) => {
-        let nt = nt.clone();
-        result.push_str("{{{#!");
-        result.push_str(&nt.triplename);
-        result.push(' ');
-        if nt.attr.is_some() {
-          result.push_str(&nt.attr.unwrap());
-        }
-        result.push('\n');
-        if nt.content.is_some() {
-          result.push_str(&nt.content.unwrap().to_string());
-        }
-        result.push_str("}}}");
-      }
-      //이러면 경고는 줄이고 나중에 찾아와서 다 하겠지?
-      //씨발놈
-      RenderObject::Literal(lt) => {
-        result.push_str("{{{");
-        result.push_str(lt);
-        result.push_str("}}}");
-      }
-      RenderObject::NamumarkMacro(nm) => {
-        result.push('[');
-        if nm.macroarg.is_none() {
-          result.push_str(&nm.macroname);
-          result.push(']');
-        } else {
-          result.push_str(&nm.macroname);
-          result.push('(');
-          result.push_str(nm.macroarg.as_ref().unwrap());
-          result.push_str(")]");
-        }
-      }
-      RenderObject::List(lt) => {
-        let mut a = true;
-        if lt.from.is_some() {
-          a = false;
-        }
-        for i in lt.content.clone() {
-          result.push_str(&" ".repeat(i.lvl));
-          match lt.listtype {
-            ListType::Hangul => {
-              result.push_str("가.");
-            }
-            ListType::AlphaSmall => {
-              result.push_str("a.");
-            }
-            ListType::AlphaBig => {
-              result.push_str("A.");
-            }
-            ListType::RomanBig => {
-              result.push_str("I.");
-            }
-            ListType::RomanSmall => {
-              result.push_str("i.");
-            }
-            ListType::Arabia => {
-              result.push_str("1.");
-            }
-            ListType::List => {
-              result.push_str("*.");
-            }
-          }
-          if !a {
-            result.push('#');
-            result.push_str(lt.from.unwrap().to_string().as_str());
-            a = true;
-          }
-          result.push(' ');
-          result.push_str(&i.content.to_string());
-          result.push('\n');
-        }
-      }
-      RenderObject::Quote(qt) => {}
-      #[allow(unused)]
-      RenderObject::Heading(hd) => {}
-      #[allow(unused)]
-      RenderObject::Color(cl) => {}
-      #[allow(unused)]
-      RenderObject::Plus(pl) => {}
-      #[allow(unused)]
-      RenderObject::Minus(mn) => {}
-      #[allow(unused)]
-      RenderObject::Reference(rf) => {}
-      _ => {
-        panic!("how?");
-      }
-    }
-    result
-  }
-}
-#[allow(dead_code)]
-trait InnerToString {
-  fn to_string(&self) -> String;
-}
-impl InnerToString for Vec<Objects> {
-  fn to_string(&self) -> String {
-    let mut result = String::new();
-    let mut index = 0;
-    loop {
-      match self.get(index) {
-        Some(Objects::Char(ch)) => {
-          result.push(*ch);
-        }
-        Some(Objects::RenderObject(rdobj)) => {
-          result.push_str(&rdobj.to_string());
-        }
-        None => {
-          break;
-        }
-      }
-      index += 1;
-    }
-    result
-  }
 }

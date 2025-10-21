@@ -1,9 +1,15 @@
 [package]
 name = "namumark"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
-
+authors = ["Duswnsey <Duswnsey@gmail.com>"]
+description = "Namumark parser"
+license = "Unlicense"
+readme = "README.md"
+repository = "https://github.com/Repo2joo/Namumark"
+keywords = ["parser", "namumark"]
 [dependencies]
+regex = "1.12.2" #흑흑
 [profile.release]
 opt-level = 3
 lto = true

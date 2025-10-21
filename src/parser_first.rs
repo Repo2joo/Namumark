@@ -1033,9 +1033,9 @@ fn parsing_close(
       }
     }
   } else if compiler.peak("\n") {
-    compiler.index += 1;
     //List
     if matches!(close, Expect::List(_)) {
+      compiler.index += 1;
       compiler.expected.pop();
       if let RenderObject::ListLine(ll) = result {
         ll.content = namumarkresult.to_vec();
@@ -1049,6 +1049,7 @@ fn parsing_close(
       .find(|x| matches!(x.0, Expect::List(_)))
       && let (true, what, how) = compiler.contains_for_parsing(|x| x == &Expect::List(*lt))
     {
+      compiler.index += 1;
       if what {
         *result = RenderObject::EarlyParseRollBack(Expect::List(*lt));
         compiler.rollbacks = Some(how);
@@ -1065,6 +1066,7 @@ fn parsing_close(
     //ListEnd
     //Quote
     if matches!(close, Expect::Quote(_)) {
+      compiler.index += 1;
       compiler.expected.pop();
       if let RenderObject::QuoteLine(ql) = result {
         ql.content = namumarkresult.to_vec();
@@ -1077,6 +1079,7 @@ fn parsing_close(
       .find(|x| matches!(x.0, Expect::Quote(_)))
       && let (true, what, how) = compiler.contains_for_parsing(|x| x == &Expect::Quote(*qt))
     {
+      compiler.index += 1;
       if what {
         *result = RenderObject::EarlyParseRollBack(Expect::Quote(*qt));
         compiler.rollbacks = Some(how);
@@ -1105,7 +1108,6 @@ fn parsing_close(
       compiler.expected.insert(idx, (Expect::None, *b, *c));
       return Some(true);
     }
-
     return None;
   } else if compiler.peak("=\n")
     || (compiler.peak("=") && compiler.index + 1 == compiler.array.len())
