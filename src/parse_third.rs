@@ -2,7 +2,7 @@ use std::mem::discriminant;
 
 use regex::Regex;
 
-//이게 파서냐
+
 use crate::{
   parser_first::slices,
   renderobjs::{
@@ -195,7 +195,7 @@ fn namumarker(
                     return false;
                   }
                 }
-                _ => panic!(), //여기서 처리하는 건 없음
+                _ => panic!(), 
               }
             } else {
               namumarkresult.extend(tuple.1);
@@ -360,7 +360,7 @@ fn parsing_close(
     compiler.index += 2;
     if *close == Expect::DelTidal {
       compiler.expected.pop();
-      if let RenderObject::DelTidal(dt /*어... 어..?*/) = result {
+      if let RenderObject::DelTidal(dt ) = result {
         dt.content = namumarkresult.to_vec();
       } else {
         panic!("지름신불타네")
@@ -512,7 +512,7 @@ fn a_whole_my_vec(close: &Expect, namumarkresult: &mut Vec<Objects>) -> Vec<Obje
     }
   }
 }
-//마지막 할거:
+
 fn get_table_cells(row: &Vec<Objects>) -> TableRow {
   let mut table_cell: Vec<TableCell> = Vec::new();
   let mut i: usize = 0;
@@ -593,7 +593,7 @@ fn get_table_cells(row: &Vec<Objects>) -> TableRow {
       }
       i += 1;
     }
-    //바이브 코딩은 신이야
+    
     let color_pattern = r"#(?:[0-9a-f]{3}|[0-9a-f]{6})|aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgrey|darkgreen|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkslategrey|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dimgrey|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|grey|green|greenyellow|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgrey|lightgreen|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightslategrey|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|rebeccapurple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen";
 
     let full_pattern = format!(r"(?i)^({cp})(?:,({cp}))?$", cp = color_pattern);

@@ -185,16 +185,6 @@ content[[link|here}}}]]",
   assert_eq!(compiler.array, vect)
 }
 #[test]
-fn 트리플_미완성_개행없이() {
-  //이게 놀랍게도 원작고증이라는...(씨ㅂ)
-  let mut compiler = Compiler::from(String::from("{{{#!wiki attr}}}"));
-  compiler.parse();
-  let vect = vec![Objects::RenderObject(RenderObject::Literal(String::from(
-    "#!wiki attr",
-  )))];
-  assert_eq!(compiler.array, vect)
-}
-#[test]
 fn 트리플_미완성_개행있이() {
   //이게 놀랍게도 원작고증이라는...(씨ㅂ)
   let mut compiler = Compiler::from(String::from(

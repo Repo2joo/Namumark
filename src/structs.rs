@@ -2,38 +2,38 @@ use std::vec;
 
 use crate::{parse_third::parse_third, parser_first::parse_first, renderobjs::RenderObject};
 #[derive(Debug)]
-///Compiler struct. Can be obtained using [Compiler::from]
+
 pub struct Compiler {
   pub(crate) index: usize,
-  ///The array that result goes
+  
   pub array: Vec<Objects>,
   pub(crate) expected: Vec<(Expect, usize, bool)>,
-  ///Fixed comments. Doesn't parsed
+  
   pub fixed_comments: Vec<String>,
-  ///Redirect
+  
   pub redirect: Option<String>,
   pub(crate) rollbacks: Option<usize>,
   pub(crate) custom_macro: Vec<CustomMacro>,
 }
 #[derive(Debug, Clone)]
 pub struct CustomMacro {
-  ///the name of macro
+  
   name: String,
-  ///weather the macro have argument
-  ///# example
-  ///\[각주\] has no argument.<br />
-  ///\[include(argument)\] has argument
+  
+  
+  
+  
   arg: bool,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum Objects {
-  ///Char
+  
   Char(char),
-  ///see [RenderObject]
+  
   RenderObject(RenderObject),
 }
 #[derive(Debug, PartialEq, Clone)]
-///No need to see.
+
 pub enum Expect {
   None,
   Link,
@@ -58,19 +58,19 @@ pub enum Expect {
   Table,
 }
 #[derive(Debug, PartialEq, Clone)]
-/// The type variant of [crate::renderobjs::List]
+
 pub enum ListType {
   Hangul,
   AlphaSmall,
   AlphaBig,
   RomanBig,
   RomanSmall,
-  ///the star(*) list
+  
   List,
   Arabia,
 }
 #[derive(Debug, PartialEq, Clone)]
-///the type variant of [crate::renderobjs::NamumarkMacro]
+
 pub enum NamuMacroType {
   YouTube,
   KakaoTV,
@@ -87,7 +87,7 @@ pub enum NamuMacroType {
   Reference,
   Br,
   Clearfix,
-  ///the custom macro
+  
   Custom,
 }
 impl Compiler {
@@ -117,7 +117,7 @@ impl Compiler {
     }
     false
   }
-  ///return Compiler from string
+  
   pub fn from(string: String) -> Compiler {
     let mut compiler = Compiler {
       index: 0,
@@ -133,7 +133,7 @@ impl Compiler {
     }
     compiler
   }
-  ///parse the string
+  
   pub fn parse(&mut self) {
     parse_first(self, Expect::None);
     self.index = 0;
@@ -430,7 +430,6 @@ impl Compiler {
     }
     if let Some(Objects::Char(' ')) = self.array.get(self.index + index) {
       return is_color;
-      //3축약, 풀헥스 지원
     }
     if let Some(Objects::Char(',')) = self.array.get(self.index + index)
       && let Some(Objects::Char('#')) = self.array.get(self.index + index + 1)
@@ -477,7 +476,6 @@ impl Compiler {
     }
     if let Some(Objects::Char(' ')) = self.array.get(self.index + index) {
       return index == rollbackindex + 3 || index == rollbackindex + 6;
-      //3축약, 풀헥스 지원
     }
     false
   }

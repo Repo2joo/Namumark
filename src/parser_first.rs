@@ -1,6 +1,3 @@
-//TODO: 코드 리뷰
-//TODO: 리터럴 prepare
-//TODO: 최적화
 use core::panic;
 use std::{mem::discriminant, vec};
 
@@ -152,7 +149,6 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
           compiler.expected.pop();
           return false;
         }
-        //첫 번째 파서의 악몽이...
         if compiler.peak("{{{") {
           compiler.index += 3;
           string.push_str("{{{");
@@ -229,7 +225,6 @@ fn prepare_result(close: &Expect, result: &mut RenderObject, compiler: &mut Comp
         lvl: *lvl,
         content: Vec::new(),
       })
-      //
     }
     Expect::Quote(lvl) => {
       *result = RenderObject::QuoteLine(QuoteLine {
@@ -314,8 +309,6 @@ fn namumarker(
       && let Some((_, how, _)) = compiler.expected.get(compiler.rollbacks.unwrap())
       && how == &compiler.index
     {
-      //TODO 이거 Exp별로 그거별로
-      //TODO 메크로 enum안에 안넣고
       compiler.index += 1;
       compiler.expected.pop();
       namumarkresult.push(Objects::Char(ch));
@@ -483,7 +476,6 @@ fn namumarker(
       || compiler.peak("[ruby(")
       || compiler.peak_macro_arg()
     {
-      //TODO 이거메크로타잎 enmu 말고 String으로 저장하기
       compiler.index += 1;
       compiler
         .expected
@@ -696,7 +688,6 @@ fn namumarker(
           if discriminant(close) == discriminant(&tuple.0) {
             match tuple.0 {
               Expect::Link => {
-                //생각해보니까 link는 earlyparse될 일이 없잖아
                 if let RenderObject::Link(link) = result {
                   link.show.extend(tuple.1.to_vec());
                 } else {
@@ -732,7 +723,6 @@ fn namumarker(
                 if let RenderObject::NamuTriple(nt) = result {
                   namumarkresult.extend(tuple.1);
                   nt.content.as_mut().unwrap().extend(namumarkresult.clone());
-                  //namumarkresult는 빌려준건데 (더이상 쓸 필요 없긴 한데)
                 } else {
                   panic!()
                 }
@@ -758,7 +748,7 @@ fn namumarker(
                   panic!()
                 }
               }
-              _ => panic!(), //여기서 처리하는 건 없음
+              _ => panic!(),
             }
           } else {
             namumarkresult.extend(tuple.1);
@@ -766,7 +756,7 @@ fn namumarker(
               RenderObject::EarlyParse((tuple.0, a_whole_my_vec(result, namumarkresult, close)));
             return false;
           }
-        } //[[ {{{#!wiki 안녕]] }}} 대충 이런거 처리용
+        }
         RenderObject::ListLine(ll) => {
           if let Some(Objects::RenderObject(RenderObject::List(lt))) = namumarkresult.last_mut() {
             lt.content.push(ll);
@@ -796,7 +786,6 @@ fn namumarker(
     *result = RenderObject::NopNopNop;
     return false;
   } else {
-    //where is my ibus
     if let Expect::List(how) = close {
       *result = RenderObject::ListLine(ListLine {
         lvl: *how,
@@ -976,12 +965,6 @@ pub(crate) fn slices(s: String) -> Vec<Objects> {
   }
   result
 }
-// 닫히는 구문 처리.
-//예를들자면 ]]라던가 }}}라던가 )]라던가.....
-//가독성을 위해 함수화를 함
-//한 번만 호출되니까 컴파일 시간에 llvm에 의해서 삽입이 이뤄짐으로 어셈블리 상으로 call을 안할 것으로 예상
-//-> 리턴 스텍을 설정하는 오버해드 걸리지 않음
-//여러번 쓰이는 것을 함수화 하라고 하긴 하지만 이거는 함수화를 안하면 못읽어...
 fn parsing_close(
   compiler: &mut Compiler,
   close: &Expect,
@@ -989,7 +972,6 @@ fn parsing_close(
   namumarkresult: &mut Vec<Objects>,
 ) -> Option<bool> {
   if compiler.peak("]") {
-    //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
     if *close == Expect::Reference {
       compiler.index += 1;
       compiler.expected.pop();
@@ -1010,7 +992,6 @@ fn parsing_close(
       }
     } else if compiler.peak("]]") {
       compiler.index += 2;
-      //그냥 메크로는 간단한 파싱문구라서 메게변수 없는 건 여기서 처리하지 않는 것이 맞을듯...
       if *close == Expect::Link {
         compiler.expected.pop();
         last_dance(result, namumarkresult);
@@ -1033,7 +1014,6 @@ fn parsing_close(
       }
     }
   } else if compiler.peak("\n") {
-    //List
     if matches!(close, Expect::List(_)) {
       compiler.index += 1;
       compiler.expected.pop();
@@ -1063,8 +1043,6 @@ fn parsing_close(
         return Some(false);
       }
     }
-    //ListEnd
-    //Quote
     if matches!(close, Expect::Quote(_)) {
       compiler.index += 1;
       compiler.expected.pop();
@@ -1093,7 +1071,6 @@ fn parsing_close(
         return Some(false);
       }
     }
-    //HeadingSibal
     if let Some(idx) = compiler
       .expected
       .iter()
@@ -1137,9 +1114,8 @@ fn parsing_close(
     } else {
       namumarkresult.push(Objects::Char('='));
       namumarkresult.push(Objects::Char('\n'));
-      return Some(true); //{{{#!wiki BacktraceFrame
+      return Some(true); 
 
-      //}}}
     }
   } else if compiler.peak("}}}") {
     compiler.index += 3;

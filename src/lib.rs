@@ -5,8 +5,9 @@
 //! You can add Custon Macro using [Compiler::add_custom_macros]
 //! # Example
 //! ```rust
+//!use munarkma::structs::Compiler;
 //!fn main() {
-//!    let compiler = Compiler::from("Hello, Namumark!");
+//!    let compiler = Compiler::from("Hello, Namumark!".to_string());
 //!    println!("{:#?}", compiler.array);
 //!}
 //!```
