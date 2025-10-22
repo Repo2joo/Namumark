@@ -9,7 +9,7 @@ use crate::{
     Altitude, Bold, CellAttribute, DelBar, DelTidal, Direction, Itelic, Lower, RenderObject, Table,
     TableCell, TableRow, UnderLine, Upper,
   },
-  structs::{Compiler, Expect, Objects},
+  structs::{BOLD, Compiler, DELBAR, DELTITAL, Expect, ITELIC, LOWER, Objects, TABLE, UNDERLINE, UPPER},
 };
 
 pub fn parse_third(compiler: &mut Compiler, close: Expect) -> RenderObject {
@@ -75,43 +75,43 @@ fn namumarker(
       if !parsing_close(compiler, close, result, namumarkresult) {
         return false;
       }
-      if compiler.peak("'''") {
+      if compiler.peak(&BOLD) {
         compiler.index += 3;
         compiler
           .expected
           .push((Expect::Bold, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::Bold));
-      } else if compiler.peak("''") {
+      } else if compiler.peak(&ITELIC) {
         compiler.index += 2;
         compiler
           .expected
           .push((Expect::Itelic, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::Itelic));
-      } else if compiler.peak("~~") {
+      } else if compiler.peak(&DELTITAL) {
         compiler.index += 2;
         compiler
           .expected
           .push((Expect::DelTidal, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::DelTidal));
-      } else if compiler.peak("--") {
+      } else if compiler.peak(&DELBAR) {
         compiler.index += 2;
         compiler
           .expected
           .push((Expect::DelBar, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::DelBar));
-      } else if compiler.peak("__") {
+      } else if compiler.peak(&UNDERLINE) {
         compiler.index += 2;
         compiler
           .expected
           .push((Expect::UnderLine, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::UnderLine));
-      } else if compiler.peak("^^") {
+      } else if compiler.peak(&UPPER) {
         compiler.index += 2;
         compiler
           .expected
           .push((Expect::Upper, compiler.index, false));
         thisparsing = Some(parse_third(compiler, Expect::Upper));
-      } else if compiler.peak(",,") {
+      } else if compiler.peak(&LOWER) {
         compiler.index += 2;
         compiler
           .expected
@@ -240,7 +240,7 @@ fn parsing_close(
   result: &mut RenderObject,
   namumarkresult: &mut Vec<Objects>,
 ) -> bool {
-  if compiler.peak("||")
+  if compiler.peak(&TABLE)
     && (compiler.index + 2 == compiler.array.len()
       || (compiler
         .get(compiler.index + 2)
@@ -279,7 +279,7 @@ fn parsing_close(
       }
       true
     }
-  } else if compiler.peak("'''") {
+  } else if compiler.peak(&BOLD) {
     compiler.index += 3;
     if *close == Expect::Bold {
       compiler.expected.pop();
@@ -317,7 +317,7 @@ fn parsing_close(
       compiler.index -= 3;
       true
     }
-  } else if compiler.peak("''") {
+  } else if compiler.peak(&ITELIC) {
     compiler.index += 2;
     if *close == Expect::Itelic {
       compiler.expected.pop();
@@ -356,7 +356,7 @@ fn parsing_close(
       compiler.index -= 2;
       true
     }
-  } else if compiler.peak("~~") {
+  } else if compiler.peak(&DELTITAL) {
     compiler.index += 2;
     if *close == Expect::DelTidal {
       compiler.expected.pop();
@@ -377,7 +377,7 @@ fn parsing_close(
       compiler.index -= 2;
       true
     }
-  } else if compiler.peak("--") {
+  } else if compiler.peak(&DELBAR) {
     compiler.index += 2;
     if *close == Expect::DelBar {
       compiler.expected.pop();
@@ -398,7 +398,7 @@ fn parsing_close(
       compiler.index -= 2;
       true
     }
-  } else if compiler.peak("__") {
+  } else if compiler.peak(&UNDERLINE) {
     compiler.index += 2;
     if *close == Expect::UnderLine {
       compiler.expected.pop();
@@ -419,7 +419,7 @@ fn parsing_close(
       compiler.index -= 2;
       true
     }
-  } else if compiler.peak(",,") {
+  } else if compiler.peak(&LOWER) {
     compiler.index += 2;
     if *close == Expect::Lower {
       compiler.expected.pop();
@@ -440,7 +440,7 @@ fn parsing_close(
       compiler.index -= 2;
       true
     }
-  } else if compiler.peak("^^") {
+  } else if compiler.peak(&UPPER) {
     compiler.index += 3;
     if *close == Expect::Upper {
       compiler.expected.pop();

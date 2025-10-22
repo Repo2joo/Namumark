@@ -1,4 +1,4 @@
-use std::vec;
+use std::{cell::{LazyCell, OnceCell}, iter::Inspect, sync::{Arc, Once}, time::Instant, vec};
 
 use crate::{parse_third::parse_third, parser_first::parse_first, renderobjs::RenderObject};
 #[derive(Debug)]
@@ -99,10 +99,10 @@ impl Compiler {
       if i.arg {
         continue;
       };
-      if self.peak(format!("[{}]", i.name).as_str()) {
-        self.index += i.name.len() + 2;
-        return Some(i.name);
-      }
+      // if self.peak(format!("[{}]", i.name).as_str()) {
+      //   self.index += i.name.len() + 2;
+      //   return Some(i.name);
+      // }
     }
     None
   }
@@ -111,9 +111,9 @@ impl Compiler {
       if !i.arg {
         continue;
       };
-      if self.peak(format!("[{}(", i.name).as_str()) {
-        return true;
-      }
+      // if self.peak(format!("[{}(", i.name).as_str()) {
+      //   return true;
+      // }
     }
     false
   }
@@ -135,10 +135,14 @@ impl Compiler {
   }
   
   pub fn parse(&mut self) {
+    let  time = Instant::now();
     parse_first(self, Expect::None);
+    println!("first:{:?}", time.elapsed());
     self.index = 0;
     self.expected.clear();
+    let  time = Instant::now();
     parse_third(self, Expect::None);
+    println!("second:{:?}", time.elapsed());
     self.fixed_comments.pop();
   }
   pub fn add_custom_macros(&mut self, macros: Vec<CustomMacro>) {
@@ -149,18 +153,6 @@ impl Compiler {
   }
   pub(crate) fn current(&self) -> Option<Objects> {
     self.array.get(self.index).cloned()
-  }
-  pub(crate) fn peak(&self, str: &str) -> bool {
-    for (idx, ch) in str.chars().enumerate() {
-      if let Some(Objects::Char(cha)) = self.get(self.index + idx) {
-        if ch.to_lowercase().to_string() != *cha.to_lowercase().to_string() {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    }
-    true
   }
   pub(crate) fn peak_line(&mut self, str: &str) -> bool {
     let mut idx = 0;
@@ -479,7 +471,62 @@ impl Compiler {
     }
     false
   }
+  pub(crate) fn peak(&self, str_: &[char]) -> bool {
+    for (i, &c) in str_.iter().enumerate() {
+      let Some(Objects::Char(cha)) = self.get(self.index + i) else {
+        return false;
+      };
+
+      // 소문자로 비교하되, 할당 없이 처리
+      if c.to_ascii_lowercase() != cha.to_ascii_lowercase() {
+        return false;
+      }
+    }
+    true
+  }
 }
+pub static LINK_OPEN:[char; 2] = ['[', '['];
+pub static LINK_CLOSE:[char; 2] = [']', ']'];
+pub static SPACE:[char; 1] = [' '];
+pub static MACRO_CLOSE:[char; 1] = [']'];
+pub static TRIPLE_OPEN:[char; 3] = ['{', '{', '{'];
+pub static TRIPLE_CLOSE:[char; 3] = ['}', '}', '}'];
+pub static BOLD:[char; 3] = ['\'', '\'', '\''];
+pub static ITELIC:[char; 2] = ['\'', '\''];
+pub static DELTITAL:[char; 2] = ['~', '~'];
+pub static DELBAR:[char; 2] = ['-', '-'];
+pub static UNDERLINE:[char; 2] = ['_', '_'];
+pub static UPPER:[char; 2] = ['^', '^'];
+pub static LOWER:[char; 2] = [',', ','];
+pub static TABLE:[char; 2] = ['|', '|'];
+pub static MACROARG_CLOSE:[char; 2] = [')', ']'];
+pub static WIKI:[char; 10] = ['{', '{', '{', '#', '!', 'w', 'i', 'k', 'i', ' '];
+pub static IF:[char; 8] = ['{', '{', '{', '#', '!', 'i', 'f', ' '];
+pub static FOLDING:[char; 13] = ['{', '{', '{', '#', '!', 'f', 'o', 'l', 'd', 'i', 'n', 'g', ' '];
+pub static PLUS:[char; 4] = ['{', '{', '{', '+'];
+pub static MINUS:[char; 4] = ['{', '{', '{', '-'];
+pub static REFOPEN:[char; 2] = ['[', '*'];
+pub static DATE:[char; 6] = ['[', 'd', 'a', 't', 'e', ']'];
+pub static DATETIME:[char; 10] = ['[', 'd', 'a', 't', 'e', 't', 'i', 'm', 'e', ']'];
+pub static 몪차:[char; 4] = ['[', '목', '차', ']'];
+pub static TABLEOFCONTENTS:[char; 16] = ['[', 't', 'a', 'b', 'l', 'e', 'o', 'f', 'c', 'o', 'n', 't', 'e', 'n', 't', 's'];
+pub static 깎쭈:[char; 4] = ['[', '각', '주', ']'];
+pub static FOOTNOTE:[char; 10] = ['[', 'f', 'o', 'o', 't', 'n', 'o', 't', 'e', ']'];
+pub static 뀨:[char; 4] = ['[', 'b', 'r', ']'];
+pub static CLEARFIX:[char; 10] = ['[', 'c', 'l', 'e', 'a', 'r', 'f', 'i', 'x', ']'];
+pub static YOUTUBE:[char; 9] = ['[', 'y', 'o', 'u', 't', 'u', 'b', 'e', '('];
+pub static NICOVIDEO:[char; 11] = ['[', 'n', 'i', 'c', 'o', 'v', 'i', 'd', 'e', 'o', '('];
+pub static VIMEO:[char; 7] = ['[', 'v', 'i', 'm', 'e', 'o', '('];
+pub static NAVERTV:[char; 9] = ['[', 'n', 'a', 'v', 'e', 'r', 't', 'v', '('];
+pub static KAKAOTV:[char; 9] = ['[', 'k', 'a', 'k','a', 'o', 't', 'v', '('];
+pub static INCLUDE:[char; 9] = ['[', 'i', 'n', 'c', 'l', 'u', 'd', 'e', '('];
+pub static AGE:[char; 5] = ['[', 'a', 'g', 'e', '('];
+pub static DDAY:[char; 6] = ['[', 'd', 'd', 'a', 'y', '('];
+pub static PAGECOUNT:[char; 11] = ['[', 'p', 'a', 'g', 'e', 'c', 'o', 'u', 'n', 't', '('];
+pub static RUBY:[char; 6] = ['[', 'r', 'u', 'b', 'y', '('];
+pub static NEWLINE:[char; 1] = ['\n'];
+pub static EQNEWLINE:[char; 2] = ['=', '\n'];
+pub static EQ:[char; 1] = ['='];
 fn 에휴_진짜_왜그럼(sliceee: &[Objects]) -> String {
   let mut result = String::new();
   for obj in sliceee {
